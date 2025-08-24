@@ -1,0 +1,33 @@
+{
+  "FileFilter": {
+    "IncludedExtensions": [
+      ".cs",
+      ".vb",
+      ".fs",
+      ".csproj",
+      ".sln",
+      ".props",
+      ".targets",
+      ".json",
+      ".config",
+      ".md"
+    ],
+    "ExcludedDirectories": [
+      "**/bin/**",
+      "**/obj/**",
+      "**/node_modules/**",
+      "**/packages/**",
+      "**/.git/**",
+      "**/.vs/**",
+      "**/TestResults/**"
+    ]
+  },
+  "Chunking": {
+    "MaxChunkSizeKb": 128
+
+  },
+  "Output": {
+    "Format": "markdown",
+    "OutputDirectory": "./ai-output"
+  }
+}

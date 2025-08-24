@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileToMarkdownConverter", "FileToMarkdownConverter\FileToMarkdownConverter.csproj", "{DA077AF1-ECB4-95A2-6221-4D0F54773832}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DA077AF1-ECB4-95A2-6221-4D0F54773832}.Debug|x64.ActiveCfg = Debug|x64
+		{DA077AF1-ECB4-95A2-6221-4D0F54773832}.Debug|x64.Build.0 = Debug|x64
+		{DA077AF1-ECB4-95A2-6221-4D0F54773832}.Release|x64.ActiveCfg = Release|x64
+		{DA077AF1-ECB4-95A2-6221-4D0F54773832}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9D17BD2C-1962-4D4C-9754-D19C761923B4}
+	EndGlobalSection
+EndGlobal
