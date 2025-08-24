@@ -22,12 +22,11 @@
       "**/TestResults/**"
     ]
   },
+  
   "Chunking": {
     "MaxChunkSizeKb": 128
-
   },
   "Output": {
-    "Format": "markdown",
     "OutputDirectory": "./ai-output"
   }
 }

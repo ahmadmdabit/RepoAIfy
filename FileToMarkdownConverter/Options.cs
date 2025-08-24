@@ -20,6 +20,5 @@ public class Chunking
 
 public class Output
 {
-    public string Format { get; set; } = "markdown";
     public string OutputDirectory { get; set; } = "./ai-output";
 }

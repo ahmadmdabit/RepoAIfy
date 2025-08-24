@@ -15,7 +15,7 @@ This manual provides detailed instructions on how to use the `FileToMarkdownConv
 
 ## 1. Introduction
 
-`FileToMarkdownConverter` is a command-line utility designed to convert the contents of multiple source files within a directory into a single Markdown file. It's particularly useful for:
+`FileToMarkdownConverter` is a command-line utility designed to convert the contents of multiple source files within a directory into one or more Markdown files. It's particularly useful for:
 
 *   Generating documentation from source code.
 *   Creating a consolidated view of a project's files for review.
@@ -58,6 +58,8 @@ dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\FileToMarkdownConverter
 *   Replace `"D:\engamd89-dev\dotnet\dotnet-utils\YourSourceDirectory"` with the actual absolute path to your source directory.
 *   Replace `"D:\engamd89-dev\dotnet\dotnet-utils\options.json"` with the actual absolute path to your `options.json` file.
 
+**Security Warning:** Always ensure that the `--source` directory and the `OutputDirectory` specified in `options.json` point to trusted locations. Providing untrusted paths could lead to unintended file access or modification on your system.
+
 ## 4. Configuration (`options.json`)
 
 The `options.json` file dictates how `FileToMarkdownConverter` operates. Below is a breakdown of its structure and available settings.
@@ -91,7 +93,6 @@ The `options.json` file dictates how `FileToMarkdownConverter` operates. Below i
     "MaxChunkSizeKb": 128
   },
   "Output": {
-    "Format": "markdown",
     "OutputDirectory": "./ai-output"
   }
 }
@@ -102,44 +103,41 @@ The `options.json` file dictates how `FileToMarkdownConverter` operates. Below i
 This section controls which files are included or excluded from the processing.
 
 *   `IncludedExtensions` (array of strings): A list of file extensions (e.g., `.cs`, `.json`) that the converter should process. Only files with these extensions will be included. The comparison is case-insensitive.
-*   `ExcludedDirectories` (array of strings): A list of glob-like patterns for directories that should be excluded from the search. The current implementation supports basic patterns:
-    *   `**/directoryName/**`: Excludes any directory named `directoryName` at any depth.
-    *   `directoryName/`: Excludes a directory named `directoryName` (relative to the source directory).
-    *   `directoryName`: Excludes a directory with an exact name match.
+*   `ExcludedDirectories` (array of strings): A list of glob-like patterns for directories that should be excluded from the search. The current implementation uses `Microsoft.Extensions.FileSystemGlobbing` for robust pattern matching.
 
 ### Chunking
 
-This section is currently defined but not fully implemented in the provided code. It is intended for future enhancements related to breaking large files into smaller chunks.
+This section defines how the output Markdown content is split into multiple files.
 
-*   `MaxChunkSizeKb` (integer): The maximum size (in kilobytes) a file chunk should be. (Currently not used).
+*   `MaxChunkSizeKb` (integer): The maximum desired size (in kilobytes) for each output Markdown file. If the total content exceeds this size, the output will be split into multiple files (e.g., `output.md`, `output_2.md`, `output_3.md`). A value of `0` or a very large number effectively disables chunking, resulting in a single output file.
 
 ### Output
 
-This section defines the format and location of the generated output.
+This section defines the location of the generated output.
 
-*   `Format` (string): The desired output format. Currently, only `"markdown"` is supported.
-*   `OutputDirectory` (string): The path where the output Markdown file will be saved. This path is relative to the directory from which you run the `dotnet run` command. If the directory does not exist, it will be created.
+*   `OutputDirectory` (string): The path where the output Markdown file(s) will be saved. This path is relative to the directory from which you run the `dotnet run` command. If the directory does not exist, it will be created.
 
 ## 5. Examples
 
-### Example 1: Basic Conversion
+### Example 1: Basic Conversion (with potential chunking)
 
-To convert all `.cs` and `.json` files from a source directory named `MyProject` (located at `D:\engamd89-dev\dotnet\dotnet-utils\MyProject`) into a markdown file, using the default `options.json`:
+To convert all `.cs` and `.json` files from a source directory named `MyProject` (located at `D:\engamd89-dev\dotnet\dotnet-utils\MyProject`) into markdown file(s), using the default `options.json`:
 
 ```bash
 dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\FileToMarkdownConverter -- --source "D:\engamd89-dev\dotnet\dotnet-utils\MyProject" --options "D:\engamd89-dev\dotnet\dotnet-utils\options.json"
 ```
 
-This will create `output.md` in `D:\engamd89-dev\dotnet\dotnet-utils\ai-output`.
+This will create `output.md` (and potentially `output_2.md`, `output_3.md`, etc., if chunking is active) in `D:\engamd89-dev\dotnet\dotnet-utils\ai-output`.
 
-### Example 2: Custom Output Directory
+### Example 2: Custom Output Directory and Chunk Size
 
-If you modify `options.json` to set `"OutputDirectory": "./docs/generated"`, the output file will be saved in `D:\engamd89-dev\dotnet\dotnet-utils\docs\generated`.
+If you modify `options.json` to set `"OutputDirectory": "./docs/generated"` and `"MaxChunkSizeKb": 512`, the output files will be saved in `D:\engamd89-dev\dotnet\dotnet-utils\docs\generated`, with each file not exceeding approximately 512KB.
 
 ## 6. Troubleshooting
 
 *   **"Error: Source directory ... does not exist."**: Ensure the path provided to `--source` is an absolute and correct path to an existing directory.
 *   **"Error: Options file ... does not exist."**: Ensure the path provided to `--options` is an absolute and correct path to your `options.json` file.
 *   **"Error: Could not deserialize options.json."**: Check your `options.json` file for syntax errors (e.g., missing commas, unclosed brackets) and ensure it matches the expected structure.
-*   **No output file generated**: Verify that your `IncludedExtensions` in `options.json` match the files in your source directory and that no directories are inadvertently excluded by `ExcludedDirectories` patterns.
-*   **Build Errors**: If you encounter build errors, ensure you have the correct .NET 9 SDK installed and that the `System.CommandLine` package is correctly referenced in your `.csproj` file (version `2.0.0-beta4.22272.1`).
+*   **No output file(s) generated**: Verify that your `IncludedExtensions` in `options.json` match the files in your source directory and that no directories are inadvertently excluded by `ExcludedDirectories` patterns. Also, check if the source directory is empty.
+*   **Output file is unexpectedly split**: This is likely due to the `MaxChunkSizeKb` setting in `options.json`. Adjust this value if you prefer larger or smaller chunks.
+*   **Build Errors**: If you encounter build errors, ensure you have the correct .NET 9 SDK installed and that the `System.CommandLine` and `Microsoft.Extensions.FileSystemGlobbing` packages are correctly referenced in your `.csproj` file.
