@@ -6,10 +6,10 @@
 
 ## Features
 
-*   **Configurable File Filtering:** Include or exclude files based on their extensions and directory paths using glob patterns defined in `options.json`.
-*   **Smart Chunking:** Automatically splits the output Markdown content into multiple files based on a configurable maximum chunk size, improving manageability for large outputs.
-*   **Dynamic Repository Overview:** Generates a structured overview of the processed repository (files and directories) and inserts it into the first output chunk, enhancing navigability and context. This includes a hierarchical representation of the repository structure.
-*   **Command-Line Interface (CLI):** Easy-to-use command-line arguments for specifying the source directory and configuration file.
+*   **Configurable File Filtering:** Include or exclude files based on their extensions and directory paths using glob patterns defined in `options.json`, ensuring only relevant files are processed.
+*   **Smart Chunking:** Automatically splits the output Markdown content into multiple files based on a configurable maximum chunk size, improving manageability for large outputs and preventing excessively large single files.
+*   **Dynamic Repository Overview:** Generates a structured overview of the processed repository (files and directories) and inserts it into the first output chunk, enhancing navigability and providing immediate context. This includes a hierarchical representation of the repository structure.
+*   **Command-Line Interface (CLI):** Easy-to-use command-line arguments for specifying the source directory and configuration file, making the tool simple to integrate into scripts and workflows.
 *   **Markdown Output:** Generates clean Markdown file(s), with each processed file's content enclosed in a code block and clearly identified by its relative path, adhering to Markdown best practices for headings and metadata presentation.
 *   **Cross-Platform:** Built with .NET 9, ensuring compatibility across various operating systems.
 
@@ -29,6 +29,8 @@ To build the `RepoAIfy` application, navigate to the root of the `dotnet-utils` 
 dotnet build D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy
 ```
 
+**Note:** The example above uses an absolute path for clarity within this CLI context. For improved portability, you might use a relative path like `dotnet build RepoAIfy` if running from the solution directory.
+
 This will compile the project and place the executable in the `bin/Debug/net9.0/` (or `bin/Release/net9.0/`) subdirectory within the `RepoAIfy` project folder.
 
 ### Run the Application
@@ -43,7 +45,9 @@ dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy -- --source "D
 *   `"D:\engamd89-dev\dotnet\dotnet-utils\YourSourceDirectory"` with the absolute path to the directory containing the files you want to process.
 *   `"D:\engamd89-dev\dotnet\dotnet-utils\options.json"` with the absolute path to your configuration file.
 
-By default, the output Markdown file(s) (e.g., `YourSourceDirectory.md`, `YourSourceDirectory_2.md`, etc.) will be created in an `ai-output` directory relative to where you run the command, as specified in `options.json`.
+**Note:** The example above uses absolute paths for clarity within this CLI context. For improved portability, you might use relative paths (e.g., `--project RepoAIfy`) if running from the solution directory.
+
+By default, the output Markdown file(s) (e.g., `[Name of Your Source Directory].md`, `[Name of Your Source Directory]_2.md`, etc.) will be created in an `ai-output` directory relative to where you run the command, as specified in `options.json`. The `[Name of Your Source Directory]` part of the filename is derived directly from the name of the directory provided to the `--source` argument.
 
 ## Configuration (`options.json`)
 
@@ -83,10 +87,6 @@ The behavior of `RepoAIfy` is controlled by the `options.json` file. This file a
 }
 ```
 
-## Contributing
-
-Contributions are welcome! Please refer to `CONTRIBUTING.md` (TODO: Create this file) for guidelines on how to contribute to this project.
-
 ## License
 
-This project is licensed under the [MIT License](LICENSE.md) (TODO: Create this file).
+This project is licensed under the [MIT License](LICENSE).
