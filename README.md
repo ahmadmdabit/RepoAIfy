@@ -23,10 +23,10 @@ Before you begin, ensure you have the following installed:
 
 ### Build the Application
 
-To build the `RepoAIfy` application, navigate to the root of the `dotnet-utils` directory (where `dotnet-utils.sln` is located) and execute the following command:
+To build the `RepoAIfy` application, navigate to the root of the `src` directory (where `src.sln` is located) and execute the following command:
 
 ```bash
-dotnet build D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy
+dotnet build D:\engamd89-dev\dotnet\RepoAIfy\src\RepoAIfy
 ```
 
 **Note:** The example above uses an absolute path for clarity within this CLI context. For improved portability, you might use a relative path like `dotnet build RepoAIfy` if running from the solution directory.
@@ -38,12 +38,12 @@ This will compile the project and place the executable in the `bin/Debug/net9.0/
 To run the application, use the `dotnet run` command. You need to provide the absolute path to your source directory and the `options.json` file.
 
 ```bash
-dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy -- --source "D:\engamd89-dev\dotnet\dotnet-utils\YourSourceDirectory" --options "D:\engamd89-dev\dotnet\dotnet-utils\options.json"
+dotnet run --project D:\engamd89-dev\dotnet\RepoAIfy\src\RepoAIfy -- --source "D:\engamd89-dev\dotnet\RepoAIfy\src\YourSourceDirectory" --options "D:\engamd89-dev\dotnet\RepoAIfy\src\options.json"
 ```
 
 **Replace:**
-*   `"D:\engamd89-dev\dotnet\dotnet-utils\YourSourceDirectory"` with the absolute path to the directory containing the files you want to process.
-*   `"D:\engamd89-dev\dotnet\dotnet-utils\options.json"` with the absolute path to your configuration file.
+*   `"D:\engamd89-dev\dotnet\RepoAIfy\src\YourSourceDirectory"` with the absolute path to the directory containing the files you want to process.
+*   `"D:\engamd89-dev\dotnet\RepoAIfy\src\options.json"` with the absolute path to your configuration file.
 
 **Note:** The example above uses absolute paths for clarity within this CLI context. For improved portability, you might use relative paths (e.g., `--project RepoAIfy`) if running from the solution directory.
 

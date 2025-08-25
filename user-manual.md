@@ -29,12 +29,12 @@ Ensure you have the [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.
 
 ### Building the Application
 
-1.  Clone the repository or navigate to the `dotnet-utils` directory.
+1.  Clone the repository or navigate to the `src` directory.
 2.  Open your terminal or command prompt.
 3.  Execute the following command to build the application:
 
     ```bash
-    dotnet build D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy
+    dotnet build D:\engamd89-dev\dotnet\RepoAIfy\src\RepoAIfy
     ```
 
     This will compile the project and create the executable in the `bin/Debug/net9.0/` (or `bin/Release/net9.0/`) folder within the `RepoAIfy` project directory.
@@ -48,15 +48,15 @@ To run the `RepoAIfy`, you need to specify two main arguments:
 
 ### Command Syntax
 
-Navigate to the `dotnet-utils` directory in your terminal and use the following command structure:
+Navigate to the `src` directory in your terminal and use the following command structure:
 
 ```bash
-dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy -- --source "D:\engamd89-dev\dotnet\dotnet-utils\YourSourceDirectory" --options "D:\engamd89-dev\dotnet\dotnet-utils\options.json"
+dotnet run --project D:\engamd89-dev\dotnet\RepoAIfy\src\RepoAIfy -- --source "D:\engamd89-dev\dotnet\RepoAIfy\src\YourSourceDirectory" --options "D:\engamd89-dev\dotnet\RepoAIfy\src\options.json"
 ```
 
 **Important:**
-*   Replace `"D:\engamd89-dev\dotnet\dotnet-utils\YourSourceDirectory"` with the actual absolute path to your source directory.
-*   Replace `"D:\engamd89-dev\dotnet\dotnet-utils\options.json"` with the actual absolute path to your `options.json` file.
+*   Replace `"D:\engamd89-dev\dotnet\RepoAIfy\src\YourSourceDirectory"` with the actual absolute path to your source directory.
+*   Replace `"D:\engamd89-dev\dotnet\RepoAIfy\src\options.json"` with the actual absolute path to your `options.json` file.
 
 **Security Warning:** Always ensure that the `--source` directory and the `OutputDirectory` specified in `options.json` point to trusted locations. Providing untrusted paths could lead to unintended file access or modification on your system.
 
@@ -121,17 +121,17 @@ This section defines the location of the generated output.
 
 ### Example 1: Basic Conversion (with potential chunking)
 
-To convert all `.cs` and `.json` files from a source directory named `MyProject` (located at `D:\engamd89-dev\dotnet\dotnet-utils\MyProject`) into markdown file(s), using the default `options.json`:
+To convert all `.cs` and `.json` files from a source directory named `MyProject` (located at `D:\engamd89-dev\dotnet\RepoAIfy\src\MyProject`) into markdown file(s), using the default `options.json`:
 
 ```bash
-dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy -- --source "D:\engamd89-dev\dotnet\dotnet-utils\MyProject" --options "D:\engamd89-dev\dotnet\dotnet-utils\options.json"
+dotnet run --project D:\engamd89-dev\dotnet\RepoAIfy\src\RepoAIfy -- --source "D:\engamd89-dev\dotnet\RepoAIfy\src\MyProject" --options "D:\engamd89-dev\dotnet\RepoAIfy\src\options.json"
 ```
 
-This will create `MyProject.md` (and potentially `MyProject_2.md`, `MyProject_3.md`, etc., if chunking is active) in `D:\engamd89-dev\dotnet\dotnet-utils\ai-output`.
+This will create `MyProject.md` (and potentially `MyProject_2.md`, `MyProject_3.md`, etc., if chunking is active) in `D:\engamd89-dev\dotnet\RepoAIfy\src\ai-output`.
 
 ### Example 2: Custom Output Directory and Chunk Size
 
-If you modify `options.json` to set `"OutputDirectory": "./docs/generated"` and `"MaxChunkSizeKb": 512`, the output files will be saved in `D:\engamd89-dev\dotnet\dotnet-utils\docs\generated`, with each file not exceeding approximately 512KB (unless a single file itself is larger).
+If you modify `options.json` to set `"OutputDirectory": "./docs/generated"` and `"MaxChunkSizeKb": 512`, the output files will be saved in `D:\engamd89-dev\dotnet\RepoAIfy\src\docs\generated`, with each file not exceeding approximately 512KB (unless a single file itself is larger).
 
 ## 6. Troubleshooting
 

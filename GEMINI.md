@@ -17,17 +17,17 @@ Key features include:
 *   .NET 9 SDK
 
 ### Build
-To build the `RepoAIfy` application, navigate to the root of the `dotnet-utils` directory and run the following command:
+To build the `RepoAIfy` application, navigate to the root of the `src` directory and run the following command:
 
 ```bash
-dotnet build D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy
+dotnet build D:\engamd89-dev\dotnet\RepoAIfy\src\RepoAIfy
 ```
 
 ### Run
-To run the application, use the following command from the `dotnet-utils` directory. Remember to replace `"D:\engamd89-dev\dotnet\dotnet-utils\YourSourceDirectory"` with the actual absolute path to the source directory you wish to process.
+To run the application, use the following command from the `src` directory. Remember to replace `"D:\engamd89-dev\dotnet\RepoAIfy\src\YourSourceDirectory"` with the actual absolute path to the source directory you wish to process.
 
 ```bash
-dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy -- --source "D:\engamd89-dev\dotnet\dotnet-utils\YourSourceDirectory" --options "D:\engamd89-dev\dotnet\dotnet-utils\options.json"
+dotnet run --project D:\engamd89-dev\dotnet\RepoAIfy\src\RepoAIfy -- --source "D:\engamd89-dev\dotnet\RepoAIfy\src\YourSourceDirectory" --options "D:\engamd89-dev\dotnet\RepoAIfy\src\options.json"
 ```
 
 The output markdown file(s) (`output.md`, `output_2.md`, etc.) will be generated in the directory specified by the `OutputDirectory` setting in `options.json` (default is `./ai-output` relative to the current working directory).
