@@ -1,9 +1,9 @@
 using System.CommandLine;
 using System.Text;
 using System.CommandLine.Invocation;
-using FileToMarkdownConverter.Services;
+using RepoAIfy.Services;
 
-namespace FileToMarkdownConverter;
+namespace RepoAIfy;
 
 class Program
 {
@@ -63,21 +63,52 @@ class Program
         Console.WriteLine($"Processing files from: {sourceDirectory.FullName}");
         Console.WriteLine($"Output will be written to: {outputDirectory}");
 
-        var filteredFiles = fileProcessor.GetFilteredFiles(sourceDirectory, includedExtensions);
-        
+        var (filteredFiles, allRelativeDirectories) = fileProcessor.GetFilteredFiles(sourceDirectory, includedExtensions);
+
+        if (!filteredFiles.Any())
+        {
+            Console.WriteLine("No files matched the criteria. No markdown content was generated.");
+            return;
+        }
+
+        var repositoryOverview = markdownGenerator.GenerateRepositoryStructureOverview(
+            filteredFiles.Select(f => f.RelativePath),
+            allRelativeDirectories
+        );
+
+        var baseOutputFileName = sourceDirectory.Name.Replace(' ', '-') + ".md";
+        var chunkedOutputFiles = new List<string>();
+
         var chunkCount = 1;
         await foreach (var chunkContent in markdownGenerator.GenerateMarkdown(filteredFiles, sourceDirectory))
         {
-            var outputFileName = chunkCount == 1 ? Constants.OutputFileName : $"output_{chunkCount}.md";
+            var outputFileName = chunkCount == 1 ? baseOutputFileName : $"{sourceDirectory.Name.Replace(' ', '-')}_{chunkCount}.md";
             var outputFilePath = Path.Combine(outputDirectory, outputFileName);
             await File.WriteAllTextAsync(outputFilePath, chunkContent);
             Console.WriteLine($"Successfully generated markdown chunk: {outputFilePath}");
+            chunkedOutputFiles.Add(outputFilePath);
             chunkCount++;
         }
 
-        if (chunkCount == 1) // No chunks were generated, meaning no files were processed or content was empty
+        // Insert the repository overview into the first chunk
+        if (chunkedOutputFiles.Any())
         {
-            Console.WriteLine("No markdown content was generated. Check source directory, file filters, and file contents.");
+            var firstChunkContent = await File.ReadAllTextAsync(chunkedOutputFiles.First());
+            var overviewMarker = "## Repository Overview"; // Now a proper Markdown heading
+            var insertIndex = firstChunkContent.IndexOf(overviewMarker);
+
+            if (insertIndex != -1)
+            {
+                var updatedContent = new StringBuilder(firstChunkContent);
+                // Insert after the heading and its immediate newline
+                updatedContent.Insert(insertIndex + overviewMarker.Length + Environment.NewLine.Length, Environment.NewLine + repositoryOverview);
+                await File.WriteAllTextAsync(chunkedOutputFiles.First(), updatedContent.ToString());
+                Console.WriteLine($"Successfully inserted repository overview into {chunkedOutputFiles.First()}");
+            }
+            else
+            {
+                Console.Error.WriteLine($"Warning: Could not find repository overview marker in {chunkedOutputFiles.First()}. Overview not inserted.");
+            }
         }
     }
 }

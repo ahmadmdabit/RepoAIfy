@@ -1,6 +1,6 @@
-# User Manual: FileToMarkdownConverter
+# User Manual: RepoAIfy
 
-This manual provides detailed instructions on how to use the `FileToMarkdownConverter` application, including its configuration options and expected behavior.
+This manual provides detailed instructions on how to use the `RepoAIfy` application, including its configuration options and expected behavior.
 
 ## Table of Contents
 1.  [Introduction](#1-introduction)
@@ -15,7 +15,7 @@ This manual provides detailed instructions on how to use the `FileToMarkdownConv
 
 ## 1. Introduction
 
-`FileToMarkdownConverter` is a command-line utility designed to convert the contents of multiple source files within a directory into one or more Markdown files. It's particularly useful for:
+`RepoAIfy` is a command-line utility designed to convert the contents of multiple source files within a directory into one or more Markdown files. It's particularly useful for:
 
 *   Generating documentation from source code.
 *   Creating a consolidated view of a project's files for review.
@@ -34,14 +34,14 @@ Ensure you have the [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.
 3.  Execute the following command to build the application:
 
     ```bash
-    dotnet build D:\engamd89-dev\dotnet\dotnet-utils\FileToMarkdownConverter
+    dotnet build D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy
     ```
 
-    This will compile the project and create the executable in the `bin/Debug/net9.0/` (or `bin/Release/net9.0/`) folder within the `FileToMarkdownConverter` project directory.
+    This will compile the project and create the executable in the `bin/Debug/net9.0/` (or `bin/Release/net9.0/`) folder within the `RepoAIfy` project directory.
 
 ## 3. Usage
 
-To run the `FileToMarkdownConverter`, you need to specify two main arguments:
+To run the `RepoAIfy`, you need to specify two main arguments:
 
 *   `--source <SOURCE_DIRECTORY_PATH>`: The absolute path to the directory containing the files you want to process.
 *   `--options <OPTIONS_FILE_PATH>`: The absolute path to your `options.json` configuration file.
@@ -51,7 +51,7 @@ To run the `FileToMarkdownConverter`, you need to specify two main arguments:
 Navigate to the `dotnet-utils` directory in your terminal and use the following command structure:
 
 ```bash
-dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\FileToMarkdownConverter -- --source "D:\engamd89-dev\dotnet\dotnet-utils\YourSourceDirectory" --options "D:\engamd89-dev\dotnet\dotnet-utils\options.json"
+dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy -- --source "D:\engamd89-dev\dotnet\dotnet-utils\YourSourceDirectory" --options "D:\engamd89-dev\dotnet\dotnet-utils\options.json"
 ```
 
 **Important:**
@@ -62,7 +62,7 @@ dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\FileToMarkdownConverter
 
 ## 4. Configuration (`options.json`)
 
-The `options.json` file dictates how `FileToMarkdownConverter` operates. Below is a breakdown of its structure and available settings.
+The `options.json` file dictates how `RepoAIfy` operates. Below is a breakdown of its structure and available settings.
 
 ```json
 {
@@ -109,7 +109,7 @@ This section controls which files are included or excluded from the processing.
 
 This section defines how the output Markdown content is split into multiple files.
 
-*   `MaxChunkSizeKb` (integer): The maximum desired size (in kilobytes) for each output Markdown file. If the total content exceeds this size, the output will be split into multiple files (e.g., `output.md`, `output_2.md`, `output_3.md`). A value of `0` or a very large number effectively disables chunking, resulting in a single output file.
+*   `MaxChunkSizeKb` (integer): The maximum desired size (in kilobytes) for each output Markdown file. If the total content exceeds this size, the output will be split into multiple files (e.g., `YourSourceDirectory.md`, `YourSourceDirectory_2.md`, etc.). A value of `0` or a very large number effectively disables chunking, resulting in a single output file.
 
 ### Output
 
@@ -124,10 +124,10 @@ This section defines the location of the generated output.
 To convert all `.cs` and `.json` files from a source directory named `MyProject` (located at `D:\engamd89-dev\dotnet\dotnet-utils\MyProject`) into markdown file(s), using the default `options.json`:
 
 ```bash
-dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\FileToMarkdownConverter -- --source "D:\engamd89-dev\dotnet\dotnet-utils\MyProject" --options "D:\engamd89-dev\dotnet\dotnet-utils\options.json"
+dotnet run --project D:\engamd89-dev\dotnet\dotnet-utils\RepoAIfy -- --source "D:\engamd89-dev\dotnet\dotnet-utils\MyProject" --options "D:\engamd89-dev\dotnet\dotnet-utils\options.json"
 ```
 
-This will create `output.md` (and potentially `output_2.md`, `output_3.md`, etc., if chunking is active) in `D:\engamd89-dev\dotnet\dotnet-utils\ai-output`.
+This will create `MyProject.md` (and potentially `MyProject_2.md`, `MyProject_3.md`, etc., if chunking is active) in `D:\engamd89-dev\dotnet\dotnet-utils\ai-output`.
 
 ### Example 2: Custom Output Directory and Chunk Size
 

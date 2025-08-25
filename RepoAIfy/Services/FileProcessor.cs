@@ -1,7 +1,7 @@
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 
-namespace FileToMarkdownConverter.Services;
+namespace RepoAIfy.Services;
 
 public class FileProcessor
 {
@@ -18,15 +18,16 @@ public class FileProcessor
         _baseDirectory = baseDirectory;
     }
 
-    public IEnumerable<FileInfo> GetFilteredFiles(DirectoryInfo sourceDirectory, HashSet<string> includedExtensions)
+    public (IEnumerable<(FileInfo File, string RelativePath)> FilteredFiles, HashSet<string> AllRelativeDirectories) GetFilteredFiles(DirectoryInfo sourceDirectory, HashSet<string> includedExtensions)
     {
+        var filteredFiles = new List<(FileInfo File, string RelativePath)>();
+        var allRelativeDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         if (!sourceDirectory.Exists)
         {
             Console.Error.WriteLine($"Error: Source directory '{sourceDirectory.FullName}' does not exist.");
-            yield break;
+            return (filteredFiles, allRelativeDirectories);
         }
-
-        var directoryInfoWrapper = new DirectoryInfoWrapper(sourceDirectory);
 
         foreach (var file in sourceDirectory.EnumerateFiles("*", SearchOption.AllDirectories))
         {
@@ -48,7 +49,20 @@ public class FileProcessor
                 continue;
             }
 
-            yield return file;
+            filteredFiles.Add((file, relativeFilePath));
+
+            // Add all parent directories of the current file to the set of all relative directories
+            var currentDir = Path.GetDirectoryName(relativeFilePath);
+            while (!string.IsNullOrEmpty(currentDir) && currentDir != ".")
+            {
+                allRelativeDirectories.Add(currentDir.Replace('\\', '/'));
+                currentDir = Path.GetDirectoryName(currentDir);
+            }
         }
+
+        // Add the root source directory itself
+        allRelativeDirectories.Add(".");
+
+        return (filteredFiles, allRelativeDirectories);
     }
 }

@@ -1,4 +1,4 @@
-namespace FileToMarkdownConverter;
+namespace RepoAIfy;
 
 public class Options
 {

@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace FileToMarkdownConverter.Services;
+namespace RepoAIfy.Services;
 
 public class OptionsLoader
 {
