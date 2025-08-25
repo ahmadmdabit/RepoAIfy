@@ -109,7 +109,7 @@ This section controls which files are included or excluded from the processing.
 
 This section defines how the output Markdown content is split into multiple files.
 
-*   `MaxChunkSizeKb` (integer): The maximum desired size (in kilobytes) for each output Markdown file. If the total content exceeds this size, the output will be split into multiple files (e.g., `YourSourceDirectory.md`, `YourSourceDirectory_2.md`, etc.). A value of `0` or a very large number effectively disables chunking, resulting in a single output file.
+*   `MaxChunkSizeKb` (integer): The maximum desired size (in kilobytes) for each output Markdown file. If the total content (including markdown formatting overhead) of a single file exceeds this size, that file will be placed in its own chunk, and that chunk will exceed the `MaxChunkSizeKb`. Otherwise, if adding a file would cause the current chunk to exceed the limit, a new chunk will be started. A value of `0` or a very large number effectively disables chunking, resulting in a single output file.
 
 ### Output
 
@@ -131,7 +131,7 @@ This will create `MyProject.md` (and potentially `MyProject_2.md`, `MyProject_3.
 
 ### Example 2: Custom Output Directory and Chunk Size
 
-If you modify `options.json` to set `"OutputDirectory": "./docs/generated"` and `"MaxChunkSizeKb": 512`, the output files will be saved in `D:\engamd89-dev\dotnet\dotnet-utils\docs\generated`, with each file not exceeding approximately 512KB.
+If you modify `options.json` to set `"OutputDirectory": "./docs/generated"` and `"MaxChunkSizeKb": 512`, the output files will be saved in `D:\engamd89-dev\dotnet\dotnet-utils\docs\generated`, with each file not exceeding approximately 512KB (unless a single file itself is larger).
 
 ## 6. Troubleshooting
 
@@ -140,4 +140,5 @@ If you modify `options.json` to set `"OutputDirectory": "./docs/generated"` and 
 *   **"Error: Could not deserialize options.json."**: Check your `options.json` file for syntax errors (e.g., missing commas, unclosed brackets) and ensure it matches the expected structure.
 *   **No output file(s) generated**: Verify that your `IncludedExtensions` in `options.json` match the files in your source directory and that no directories are inadvertently excluded by `ExcludedDirectories` patterns. Also, check if the source directory is empty.
 *   **Output file is unexpectedly split**: This is likely due to the `MaxChunkSizeKb` setting in `options.json`. Adjust this value if you prefer larger or smaller chunks.
+*   **Output chunk exceeds `MaxChunkSizeKb`**: This can happen if a single source file's content (after markdown formatting) is larger than the specified `MaxChunkSizeKb`. The application will issue a warning to `Console.Error` in such cases.
 *   **Build Errors**: If you encounter build errors, ensure you have the correct .NET 9 SDK installed and that the `System.CommandLine` and `Microsoft.Extensions.FileSystemGlobbing` packages are correctly referenced in your `.csproj` file.

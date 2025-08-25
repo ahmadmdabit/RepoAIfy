@@ -52,6 +52,15 @@ public class MarkdownGenerator
             // Estimate the size of the current file's markdown representation
             var fileMarkdownSize = GetEstimatedMarkdownSize(relativePath, fileExtension, fileContent);
 
+            // --- NEW CHECK FOR OVERSIZED SINGLE FILES ---
+            if (_maxChunkSizeKb > 0 && (double)fileMarkdownSize / BytesPerKb > _maxChunkSizeKb)
+            {
+                Console.Error.WriteLine($"Warning: File '{relativePath}' ({(double)fileMarkdownSize / BytesPerKb:F2}KB) is larger than MaxChunkSizeKb ({_maxChunkSizeKb}KB). It will be placed in its own chunk, which will exceed the maximum chunk size.");
+                // Even though it exceeds, we still process it as a single unit for now.
+                // The existing chunking logic below will ensure it starts a new chunk if current one is not empty.
+            }
+            // --- END NEW CHECK ---
+
             // Check if adding this file would exceed the max chunk size
             if (_maxChunkSizeKb > 0 && (currentChunkContent.Length + fileMarkdownSize) / BytesPerKb > _maxChunkSizeKb)
             {
@@ -152,10 +161,10 @@ public class MarkdownGenerator
     private int GetEstimatedMarkdownSize(string relativePath, string fileExtension, string fileContent)
     {
         // Rough estimation of markdown overhead (delimiters, metadata lines, code block fences)
-        var overhead = $"\n### File: `{relativePath}`".Length + // File heading
-                       $"*   **Full Path:** `{260}`".Length + // Max path length estimate
-                       $"*   **Extension:** `{fileExtension}`".Length + 
-                       $"``` {fileExtension.Substring(1)}```".Length + // Code fences
+        var overhead = ($"\n### File: `{relativePath}`").Length + // File heading
+                       ($"*   **Full Path:** `{260}`").Length + // Max path length estimate
+                       ($"*   **Extension:** `{fileExtension}`").Length + 
+                       ($"``` {fileExtension.Substring(1)}```").Length + // Code fences
                        Constants.FileEndDelimiter.Length + // Explicit file end marker
                        (8 * 10); // Newline characters and some buffer
 
