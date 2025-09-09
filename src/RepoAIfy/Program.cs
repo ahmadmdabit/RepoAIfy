@@ -59,7 +59,17 @@ internal class Program
                     return;
                 }
 
-                await converterRunner.Run(sourceDirectory, optionsFile);
+                var optionsLoader = new RepoAIfyLib.Services.OptionsLoader();
+                var options = await optionsLoader.LoadOptions(optionsFile);
+
+                if (options == null)
+                {
+                    Log.Error($"Error: Could not load options from {optionsFile.FullName}.");
+                    context.ExitCode = 1;
+                    return;
+                }
+
+                await converterRunner.Run(sourceDirectory, options);
             });
 
             return await rootCommand.InvokeAsync(args);

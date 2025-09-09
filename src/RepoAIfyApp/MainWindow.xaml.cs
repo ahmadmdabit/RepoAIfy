@@ -23,6 +23,8 @@ using Serilog;
 using Serilog.Extensions.Logging;
 
 using RepoAIfyLib;
+using RepoAIfyLib.Services;
+using RepoAIfyLib.Models;
 
 namespace RepoAIfyApp
 {
@@ -90,49 +92,32 @@ namespace RepoAIfyApp
 
         private void PopulateTreeView(string path)
         {
-            var includedExtensions = new HashSet<string>(IncludedExtensionsTextBox.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), StringComparer.OrdinalIgnoreCase);
+            var includedExtensions = IncludedExtensionsTextBox.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
             var excludedDirectories = ExcludedDirectoriesTextBox.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 
-            var matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
-            matcher.AddIncludePatterns(excludedDirectories);
+            var dataService = new TreeViewDataService();
+            var fileSystemTree = dataService.GetFileSystemTree(path, includedExtensions, excludedDirectories);
 
-            var rootNode = new FileSystemNode { Name = System.IO.Path.GetFileName(path), Path = path, IsDirectory = true };
-            PopulateChildren(rootNode, includedExtensions, matcher, path);
+            var rootNode = ConvertToFileSystemNode(fileSystemTree, null);
             FileTreeView.ItemsSource = new ObservableCollection<FileSystemNode> { rootNode };
         }
 
-                private void PopulateChildren(FileSystemNode parentNode, HashSet<string> includedExtensions, Matcher matcher, string basePath)
+        private FileSystemNode ConvertToFileSystemNode(FileSystemTree treeNode, FileSystemNode? parent)
         {
-            if (parentNode.Path == null) return;
-
-            try
+            var node = new FileSystemNode
             {
-                foreach (var directory in Directory.GetDirectories(parentNode.Path))
-                {
-                    var relativePath = System.IO.Path.GetRelativePath(basePath, directory);
-                    // Append a directory separator to correctly match directory patterns like '**/bin/**'
-                    if (matcher.Match(relativePath + System.IO.Path.DirectorySeparatorChar).HasMatches) continue;
+                Name = treeNode.Name,
+                Path = treeNode.Path,
+                IsDirectory = treeNode.IsDirectory,
+                Parent = parent
+            };
 
-                    var childNode = new FileSystemNode { Name = System.IO.Path.GetFileName(directory), Path = directory, IsDirectory = true, Parent = parentNode };
-                    parentNode.Children.Add(childNode);
-                    PopulateChildren(childNode, includedExtensions, matcher, basePath);
-                }
-
-                foreach (var file in Directory.GetFiles(parentNode.Path))
-                {
-                    var relativePath = System.IO.Path.GetRelativePath(basePath, file);
-                    if (matcher.Match(relativePath).HasMatches) continue;
-
-                    if (!includedExtensions.Contains(System.IO.Path.GetExtension(file))) continue;
-
-                    var childNode = new FileSystemNode { Name = System.IO.Path.GetFileName(file), Path = file, IsDirectory = false, Parent = parentNode };
-                    parentNode.Children.Add(childNode);
-                }
-            }
-            catch (UnauthorizedAccessException)
+            foreach (var child in treeNode.Children)
             {
-                // Ignore folders that can't be accessed
+                node.Children.Add(ConvertToFileSystemNode(child, node));
             }
+
+            return node;
         }
 
 
@@ -186,7 +171,8 @@ namespace RepoAIfyApp
                     return;
                 }
 
-                var includedFiles = GetCheckedFiles();
+                var rootNode = FileTreeView.ItemsSource.Cast<FileSystemNode>().FirstOrDefault();
+                var includedFiles = rootNode?.GetCheckedFilePaths() ?? new List<string>();
                 if (!includedFiles.Any())
                 {
                     Log.Error("No files selected in the tree view.");
@@ -233,31 +219,6 @@ namespace RepoAIfyApp
                 SetUiState(true);
             }
         }
-
-        private List<string> GetCheckedFiles()
-        {
-            var checkedFiles = new List<string>();
-            var rootNode = FileTreeView.ItemsSource.Cast<FileSystemNode>().FirstOrDefault();
-            if (rootNode != null)
-            {
-                GetCheckedFilesRecursive(rootNode, checkedFiles);
-            }
-            return checkedFiles;
-        }
-
-        private void GetCheckedFilesRecursive(FileSystemNode node, List<string> checkedFiles)
-        {
-            if (node.IsChecked == true && !node.IsDirectory && node.Path != null)
-            {
-                checkedFiles.Add(node.Path);
-            }
-
-            foreach (var child in node.Children)
-            {
-                GetCheckedFilesRecursive(child, checkedFiles);
-            }
-        }
-
 
         private void SetUiState(bool isEnabled)
         {

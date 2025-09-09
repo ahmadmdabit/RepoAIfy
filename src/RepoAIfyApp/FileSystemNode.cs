@@ -87,5 +87,25 @@ namespace RepoAIfyApp
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        public IEnumerable<string> GetCheckedFilePaths()
+        {
+            var checkedFiles = new List<string>();
+            GetCheckedFilesRecursive(this, checkedFiles);
+            return checkedFiles;
+        }
+
+        private void GetCheckedFilesRecursive(FileSystemNode node, List<string> checkedFiles)
+        {
+            if (node.IsChecked == true && !node.IsDirectory && node.Path != null)
+            {
+                checkedFiles.Add(node.Path);
+            }
+
+            foreach (var child in node.Children)
+            {
+                GetCheckedFilesRecursive(child, checkedFiles);
+            }
+        }
     }
 }

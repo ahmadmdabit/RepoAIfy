@@ -14,7 +14,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="200" /> <!--  New Row for TreeView  -->
+            <RowDefinition Height="200" />
+            <!--  New Row for TreeView  -->
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -66,8 +67,8 @@
             Grid.Column="1"
             Width="80"
             Margin="5"
-            Content="Browse..."
-            Click="BrowseOptionsButton_Click" />
+            Click="BrowseOptionsButton_Click"
+            Content="Browse..." />
 
         <!--  Row 2: File Tree View  -->
         <Label
@@ -75,23 +76,29 @@
             Grid.Column="0"
             VerticalAlignment="Top"
             Content="Files to Include:" />
-        <ScrollViewer
+        <!--<ScrollViewer
             Grid.Row="2"
             Grid.Column="0"
             Grid.ColumnSpan="2"
             Margin="0,25,0,0"
             VerticalScrollBarVisibility="Auto">
-            <TreeView Name="FileTreeView">
-                <TreeView.Resources>
-                    <HierarchicalDataTemplate DataType="{x:Type local:FileSystemNode}" ItemsSource="{Binding Children}">
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox IsChecked="{Binding IsChecked}" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding Name}" Margin="5,0" />
-                        </StackPanel>
-                    </HierarchicalDataTemplate>
-                </TreeView.Resources>
-            </TreeView>
-        </ScrollViewer>
+        </ScrollViewer>-->
+        <TreeView
+            Name="FileTreeView"
+            Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="0,25,0,0"
+            ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type local:FileSystemNode}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsChecked}" />
+                        <TextBlock Margin="5,0" Text="{Binding Name}" />
+                    </StackPanel>
+                </HierarchicalDataTemplate>
+            </TreeView.Resources>
+        </TreeView>
 
         <!--  Row 3: Included Extensions  -->
         <Label
@@ -164,19 +171,16 @@
             Margin="0,5,0,0"
             VerticalAlignment="Top"
             Content="Logs:" />
-        <ScrollViewer
+        <TextBox
+            Name="LogTextBox"
             Grid.Row="8"
             Grid.Column="0"
             Grid.ColumnSpan="2"
             Margin="0,30,0,0"
-            VerticalScrollBarVisibility="Auto">
-            <TextBox
-                Name="LogTextBox"
-                AcceptsReturn="True"
-                IsReadOnly="True"
-                TextWrapping="Wrap"
-                VerticalScrollBarVisibility="Visible" />
-        </ScrollViewer>
+            AcceptsReturn="True"
+            IsReadOnly="True"
+            TextWrapping="Wrap"
+            VerticalScrollBarVisibility="Auto" />
 
         <!--  Row 9: Status Bar  -->
         <StatusBar
