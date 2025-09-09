@@ -1,6 +1,8 @@
 using System.Text;
 
-namespace RepoAIfy.Services;
+using RepoAIfyLib;
+
+namespace RepoAIfyLib.Services;
 
 public class MarkdownGenerator
 {
@@ -161,12 +163,12 @@ public class MarkdownGenerator
     private int GetEstimatedMarkdownSize(string relativePath, string fileExtension, string fileContent)
     {
         // Rough estimation of markdown overhead (delimiters, metadata lines, code block fences)
-        var overhead = ($"\n### File: `{relativePath}`").Length + // File heading
-                       ($"*   **Full Path:** `{260}`").Length + // Max path length estimate
-                       ($"*   **Extension:** `{fileExtension}`").Length + 
-                       ($"``` {fileExtension.Substring(1)}```").Length + // Code fences
+        var overhead = $"\n### File: `{relativePath}`".Length + // File heading
+                       $"*   **Full Path:** `{260}`".Length + // Max path length estimate
+                       $"*   **Extension:** `{fileExtension}`".Length + 
+                       $"``` {fileExtension.Substring(1)}```".Length + // Code fences
                        Constants.FileEndDelimiter.Length + // Explicit file end marker
-                       (8 * 10); // Newline characters and some buffer
+                       8 * 10; // Newline characters and some buffer
 
         return Encoding.UTF8.GetByteCount(fileContent) + overhead;
     }

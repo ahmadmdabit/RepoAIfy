@@ -1,4 +1,4 @@
-namespace RepoAIfy;
+namespace RepoAIfyLib;
 
 internal static class Constants
 {

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 
-namespace RepoAIfy.Services;
+namespace RepoAIfyLib.Services;
 
 public class FileProcessor
 {

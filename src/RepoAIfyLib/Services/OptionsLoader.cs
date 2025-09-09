@@ -1,6 +1,8 @@
 using System.Text.Json;
 
-namespace RepoAIfy.Services;
+using RepoAIfyLib;
+
+namespace RepoAIfyLib.Services;
 
 public class OptionsLoader
 {

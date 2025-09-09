@@ -1,4 +1,4 @@
-namespace RepoAIfy;
+namespace RepoAIfyLib;
 
 public class Options
 {
