@@ -5,66 +5,49 @@ namespace RepoAIfyLib.Services;
 
 public class FileProcessor
 {
-    private readonly Matcher _matcher;
-    private readonly DirectoryInfo _baseDirectory;
-
     public record FileInfoDetails(FileInfo File, string RelativePath);
 
-
-    public FileProcessor(Options options, DirectoryInfo baseDirectory)
+    public (List<FileInfoDetails> FilteredFiles, List<string> AllRelativeDirectories) GetFilteredFiles(
+        DirectoryInfo sourceDirectory,
+        IEnumerable<string> includedExtensions,
+        IEnumerable<string> excludedDirectoryPatterns)
     {
-        _matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
-        foreach (var pattern in options.FileFilter.ExcludedDirectories)
+        var matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
+        
+        // Add patterns to include files with the specified extensions from any directory.
+        matcher.AddIncludePatterns(includedExtensions.Select(ext => $"**/*{ext}"));
+        
+        // Add patterns to exclude directories.
+        matcher.AddExcludePatterns(excludedDirectoryPatterns);
+
+        // Execute the matcher to get a list of relative file paths that match.
+        var result = matcher.Execute(new DirectoryInfoWrapper(sourceDirectory));
+
+        var filteredFiles = result.Files.Select(match =>
         {
-            _matcher.AddInclude(pattern);
-        }
-        _baseDirectory = baseDirectory;
-    }
+            var fullPath = Path.Combine(sourceDirectory.FullName, match.Path);
+            var fileInfo = new FileInfo(fullPath);
+            // Ensure the relative path uses forward slashes for consistency.
+            var relativePath = match.Path.Replace('\\', '/');
+            return new FileInfoDetails(fileInfo, relativePath);
+        }).ToList();
 
-    public (List<FileInfoDetails> FilteredFiles, List<string> AllRelativeDirectories) GetFilteredFiles(DirectoryInfo sourceDirectory, HashSet<string> includedExtensions)
-    {
-        var filteredFiles = new List<FileInfoDetails>();
+        // Derive the set of unique parent directories from the list of filtered files.
         var allRelativeDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        if (!sourceDirectory.Exists)
+        foreach (var fileDetail in filteredFiles)
         {
-            Console.Error.WriteLine($"Error: Source directory '{sourceDirectory.FullName}' does not exist.");
-            return (filteredFiles, allRelativeDirectories.ToList());
-        }
-
-        foreach (var file in sourceDirectory.EnumerateFiles("*", SearchOption.AllDirectories))
-        {
-            var fileExtension = file.Extension;
-
-            // Check if extension is included
-            if (!includedExtensions.Contains(fileExtension))
-            {
-                continue;
-            }
-
-            // Get the relative path for glob matching
-            var relativeFilePath = Path.GetRelativePath(_baseDirectory.FullName, file.FullName);
-
-            // Check if directory is excluded using the glob matcher
-            var fileMatch = _matcher.Match(relativeFilePath);
-            if (fileMatch.HasMatches)
-            {
-                continue;
-            }
-
-            filteredFiles.Add(new FileInfoDetails(file, relativeFilePath));
-
-            // Add all parent directories of the current file to the set of all relative directories
-            var currentDir = Path.GetDirectoryName(relativeFilePath);
+            var currentDir = Path.GetDirectoryName(fileDetail.RelativePath);
             while (!string.IsNullOrEmpty(currentDir) && currentDir != ".")
             {
                 allRelativeDirectories.Add(currentDir.Replace('\\', '/'));
                 currentDir = Path.GetDirectoryName(currentDir);
             }
         }
-
-        // Add the root source directory itself
-        allRelativeDirectories.Add(".");
+        // Add the root directory itself.
+        if (filteredFiles.Any())
+        {
+            allRelativeDirectories.Add(".");
+        }
 
         return (filteredFiles, allRelativeDirectories.OrderBy(x => x).ToList());
     }

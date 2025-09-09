@@ -52,15 +52,24 @@ The output markdown file(s) will be generated in the directory specified by the 
 
 ## Development Conventions
 
-*   **Language:** C#
-*   **Framework:** .NET 9
-*   **UI Framework:** WPF
-*   **Command-Line Interface Library:** `System.CommandLine`
-*   **JSON Handling:** `System.Text.Json`
-*   **File System Operations:** Standard .NET `System.IO` classes.
-*   **Glob Matching:** `Microsoft.Extensions.FileSystemGlobbing`.
-*   **Logging:** `Serilog` is used for logging to both a file and the UI.
-*   **Code Structure:** The application is divided into three projects:
-    *   `RepoAIfyApp`: The WPF application.
-    *   `RepoAIfyLib`: The core logic library.
-    *   `RepoAIfy`: The original console application.
+### Architecture and Design
+*   **Clean Architecture:** The solution is structured to separate concerns, with UI, business logic, and data access kept in distinct projects.
+*   **SOLID Principles:** Code is written following SOLID principles to ensure it is maintainable, scalable, and testable.
+*   **Dependency Injection (DI):** Key services are managed via dependency injection, particularly in the WPF application's composition root.
+
+### Code Structure
+*   **`RepoAIfyApp` (WPF):** The main user interface project. It contains all UI elements (Views), and ViewModels, adhering to the MVVM pattern. It uses a custom `ViewModelSink` for logging.
+*   **`RepoAIfyLib` (Core Logic):** A class library containing the core business logic. It is responsible for file processing, filtering, and Markdown generation. It has no dependency on any UI framework.
+*   **`RepoAIfy` (Console):** The original command-line interface for the tool.
+
+### Naming Conventions
+*   Follows standard Microsoft C# Naming Conventions (e.g., `PascalCase` for classes and methods, `camelCase` for local variables).
+*   UI element names in XAML are post-fixed with their type (e.g., `SourceDirectoryTextBox`, `GenerateButton`).
+
+### Testing Strategy
+*   **Unit Testing:** (Future) xUnit will be used for unit testing the core logic in `RepoAIfyLib`.
+*   **Integration Testing:** (Future) The console application can be used for integration testing the end-to-end file processing workflow.
+
+### Commit Conventions
+*   Commits should follow the Conventional Commits specification (e.g., `feat:`, `fix:`, `docs:`, `refactor:`).
+*   Commit messages should be clear and concise, explaining the "what" and the "why" of the change.

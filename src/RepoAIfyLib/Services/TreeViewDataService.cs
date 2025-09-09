@@ -46,9 +46,11 @@ namespace RepoAIfyLib.Services
                     parentNode.Children.Add(childNode);
                 }
             }
-            catch (System.UnauthorizedAccessException)
+            catch (Exception ex)
             {
-                // Ignore
+                // Log the exception to provide insight into why a directory might not be fully scanned.
+                // Using a simple Console.Error.WriteLine as a placeholder for a proper logging mechanism if one were injected.
+                Console.Error.WriteLine($"Could not fully access {parentNode.Path}. Reason: {ex.Message}");
             }
         }
     }

@@ -14,24 +14,17 @@ public class MarkdownGenerator
         _maxChunkSizeKb = maxChunkSizeKb;
     }
 
-    public async IAsyncEnumerable<string> GenerateMarkdown(IEnumerable<FileProcessor.FileInfoDetails> files, DirectoryInfo baseDirectory)
+    public async IAsyncEnumerable<string> GenerateMarkdown(IEnumerable<FileProcessor.FileInfoDetails> files, DirectoryInfo baseDirectory, string repositoryOverview)
     {
         var currentChunkContent = new StringBuilder();
         var chunkCount = 1;
 
         // Generate header for the first chunk
-        var headerContent = GenerateHeader(baseDirectory.Name);
-        var headerSize = Encoding.UTF8.GetByteCount(headerContent);
-
-        if (_maxChunkSizeKb > 0 && (double)headerSize / BytesPerKb > _maxChunkSizeKb)
-        {
-            Console.Error.WriteLine($"Warning: The generated header alone ({(double)headerSize / BytesPerKb:F2}KB) exceeds the MaxChunkSizeKb ({_maxChunkSizeKb}KB). Header will be in its own chunk.");
-            yield return headerContent;
-        }
-        else
-        {
-            currentChunkContent.AppendLine(headerContent);
-        }
+        var headerContent = new StringBuilder();
+        headerContent.AppendLine(GenerateHeader(baseDirectory.Name));
+        headerContent.AppendLine(repositoryOverview); // Append the overview right after the header.
+        
+        currentChunkContent.Append(headerContent);
 
         foreach (var fileTuple in files)
         {
@@ -51,35 +44,31 @@ public class MarkdownGenerator
                 fileContent = $"Error reading file: {ex.Message}";
             }
 
-            // Estimate the size of the current file's markdown representation
-            var fileMarkdownSize = GetEstimatedMarkdownSize(relativePath, fileExtension, fileContent);
+            // Generate the full markdown for the current file into a temporary string
+            var fileMarkdownBuilder = new StringBuilder();
+            fileMarkdownBuilder.AppendLine($"\n### File: `{relativePath}`");
+            fileMarkdownBuilder.AppendLine($"*   **Full Path:** `{file.FullName}`");
+            fileMarkdownBuilder.AppendLine($"*   **Extension:** `{fileExtension}`");
+            fileMarkdownBuilder.AppendLine();
+            fileMarkdownBuilder.AppendLine($"``` {fileExtensionWithoutDot}");
+            fileMarkdownBuilder.AppendLine(fileContent);
+            fileMarkdownBuilder.AppendLine("```");
+            fileMarkdownBuilder.AppendLine(Constants.FileEndDelimiter);
+            fileMarkdownBuilder.AppendLine();
+            
+            string fileMarkdown = fileMarkdownBuilder.ToString();
+            int newFileBytes = Encoding.UTF8.GetByteCount(fileMarkdown);
 
-            // --- NEW CHECK FOR OVERSIZED SINGLE FILES ---
-            if (_maxChunkSizeKb > 0 && (double)fileMarkdownSize / BytesPerKb > _maxChunkSizeKb)
-            {
-                Console.Error.WriteLine($"Warning: File '{relativePath}' ({(double)fileMarkdownSize / BytesPerKb:F2}KB) is larger than MaxChunkSizeKb ({_maxChunkSizeKb}KB). It will be placed in its own chunk, which will exceed the maximum chunk size.");
-                // Even though it exceeds, we still process it as a single unit for now.
-                // The existing chunking logic below will ensure it starts a new chunk if current one is not empty.
-            }
-            // --- END NEW CHECK ---
-
-            // Check if adding this file would exceed the max chunk size
-            if (_maxChunkSizeKb > 0 && (currentChunkContent.Length + fileMarkdownSize) / BytesPerKb > _maxChunkSizeKb)
+            // Check if adding the new file would exceed the limit
+            if (_maxChunkSizeKb > 0 && currentChunkContent.Length > 0 && (Encoding.UTF8.GetByteCount(currentChunkContent.ToString()) + newFileBytes) / BytesPerKb > _maxChunkSizeKb)
             {
                 yield return currentChunkContent.ToString();
                 currentChunkContent.Clear();
                 chunkCount++;
             }
 
-            currentChunkContent.AppendLine($"\n### File: `{relativePath}`"); // Use proper Markdown heading
-            currentChunkContent.AppendLine($"*   **Full Path:** `{file.FullName}`");
-            currentChunkContent.AppendLine($"*   **Extension:** `{fileExtension}`");
-            currentChunkContent.AppendLine();
-            currentChunkContent.AppendLine($"``` {fileExtensionWithoutDot}");
-            currentChunkContent.AppendLine(fileContent);
-            currentChunkContent.AppendLine("```");
-            currentChunkContent.AppendLine(Constants.FileEndDelimiter); // Added explicit file end marker
-            currentChunkContent.AppendLine(); // Add a blank line after each file entry
+            // Append the new file's markdown to the current chunk
+            currentChunkContent.Append(fileMarkdown);
         }
 
         if (currentChunkContent.Length > 0)
@@ -95,7 +84,7 @@ public class MarkdownGenerator
         header.AppendLine();
         header.AppendLine("This document provides a consolidated view of the source code from the specified repository, filtered and chunked for AI analysis. Each file's content is presented within a clearly delimited section, including its full path, relative path, and extension.");
         header.AppendLine();
-        header.AppendLine("## Repository Overview"); // Changed to proper Markdown heading
+        header.AppendLine(Constants.RepositoryOverviewHeader);
         header.AppendLine();
         return header.ToString();
     }
@@ -164,7 +153,7 @@ public class MarkdownGenerator
     {
         // Rough estimation of markdown overhead (delimiters, metadata lines, code block fences)
         var overhead = $"\n### File: `{relativePath}`".Length + // File heading
-                       $"*   **Full Path:** `{260}`".Length + // Max path length estimate
+                       $"*   **Full Path:** `{{260}}`".Length + // Max path length estimate
                        $"*   **Extension:** `{fileExtension}`".Length + 
                        $"``` {fileExtension.Substring(1)}```".Length + // Code fences
                        Constants.FileEndDelimiter.Length + // Explicit file end marker

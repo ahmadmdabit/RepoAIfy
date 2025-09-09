@@ -23,9 +23,12 @@ namespace RepoAIfyLib
                 return;
             }
 
-            var fileProcessor = new FileProcessor(options, sourceDirectory);
-            var includedExtensions = new HashSet<string>(options.FileFilter.IncludedExtensions, StringComparer.OrdinalIgnoreCase);
-            var (filteredFiles, allRelativeDirectories) = fileProcessor.GetFilteredFiles(sourceDirectory, includedExtensions);
+            var fileProcessor = new FileProcessor();
+            var (filteredFiles, allRelativeDirectories) = fileProcessor.GetFilteredFiles(
+                sourceDirectory, 
+                options.FileFilter.IncludedExtensions, 
+                options.FileFilter.ExcludedDirectories
+            );
 
             await ProcessFiles(sourceDirectory, options, filteredFiles, allRelativeDirectories);
         }
@@ -78,7 +81,8 @@ namespace RepoAIfyLib
             var chunkedOutputFiles = new List<string>();
 
             var chunkCount = 1;
-            await foreach (var chunkContent in markdownGenerator.GenerateMarkdown(filteredFiles, sourceDirectory))
+            // Pass the repositoryOverview directly into the generator method
+            await foreach (var chunkContent in markdownGenerator.GenerateMarkdown(filteredFiles, sourceDirectory, repositoryOverview))
             {
                 var outputFileName = chunkCount == 1 ? baseOutputFileName : $"{sourceDirectory.Name.Replace(' ', '-')}_{chunkCount}.md";
                 var outputFilePath = Path.Combine(outputDirectory, outputFileName);
@@ -86,27 +90,6 @@ namespace RepoAIfyLib
                 logger.LogInformation($"Successfully generated markdown chunk: {outputFilePath}");
                 chunkedOutputFiles.Add(outputFilePath);
                 chunkCount++;
-            }
-
-            // Insert the repository overview into the first chunk
-            if (chunkedOutputFiles.Any())
-            {
-                var firstChunkContent = await File.ReadAllTextAsync(chunkedOutputFiles.First());
-                var overviewMarker = "## Repository Overview"; // Now a proper Markdown heading
-                var insertIndex = firstChunkContent.IndexOf(overviewMarker);
-
-                if (insertIndex != -1)
-                {
-                    var updatedContent = new StringBuilder(firstChunkContent);
-                    // Insert after the heading and its immediate newline
-                    updatedContent.Insert(insertIndex + overviewMarker.Length + Environment.NewLine.Length, Environment.NewLine + repositoryOverview);
-                    await File.WriteAllTextAsync(chunkedOutputFiles.First(), updatedContent.ToString());
-                    logger.LogInformation($"Successfully inserted repository overview into {chunkedOutputFiles.First()}");
-                }
-                else
-                {
-                    logger.LogWarning($"Warning: Could not find repository overview marker in {chunkedOutputFiles.First()}. Overview not inserted.");
-                }
             }
         }
     }
