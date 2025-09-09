@@ -8,6 +8,9 @@ public class FileProcessor
     private readonly Matcher _matcher;
     private readonly DirectoryInfo _baseDirectory;
 
+    public record FileInfoDetails(FileInfo File, string RelativePath);
+
+
     public FileProcessor(Options options, DirectoryInfo baseDirectory)
     {
         _matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
@@ -18,15 +21,15 @@ public class FileProcessor
         _baseDirectory = baseDirectory;
     }
 
-    public (IEnumerable<(FileInfo File, string RelativePath)> FilteredFiles, HashSet<string> AllRelativeDirectories) GetFilteredFiles(DirectoryInfo sourceDirectory, HashSet<string> includedExtensions)
+    public (List<FileInfoDetails> FilteredFiles, List<string> AllRelativeDirectories) GetFilteredFiles(DirectoryInfo sourceDirectory, HashSet<string> includedExtensions)
     {
-        var filteredFiles = new List<(FileInfo File, string RelativePath)>();
+        var filteredFiles = new List<FileInfoDetails>();
         var allRelativeDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         if (!sourceDirectory.Exists)
         {
             Console.Error.WriteLine($"Error: Source directory '{sourceDirectory.FullName}' does not exist.");
-            return (filteredFiles, allRelativeDirectories);
+            return (filteredFiles, allRelativeDirectories.ToList());
         }
 
         foreach (var file in sourceDirectory.EnumerateFiles("*", SearchOption.AllDirectories))
@@ -49,7 +52,7 @@ public class FileProcessor
                 continue;
             }
 
-            filteredFiles.Add((file, relativeFilePath));
+            filteredFiles.Add(new FileInfoDetails(file, relativeFilePath));
 
             // Add all parent directories of the current file to the set of all relative directories
             var currentDir = Path.GetDirectoryName(relativeFilePath);
@@ -63,6 +66,6 @@ public class FileProcessor
         // Add the root source directory itself
         allRelativeDirectories.Add(".");
 
-        return (filteredFiles, allRelativeDirectories);
+        return (filteredFiles, allRelativeDirectories.OrderBy(x => x).ToList());
     }
 }

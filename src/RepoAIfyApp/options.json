@@ -1,0 +1,25 @@
+{
+  "FileFilter": {
+    "IncludedExtensions": [
+      ".cs",
+      ".csproj",
+      ".sln",
+      ".json",
+      ".md",
+      ".xaml",
+      ".xaml.cs"
+    ],
+    "ExcludedDirectories": [
+      "**/bin/**",
+      "**/obj/**",
+      "**/.vs/**",
+      "**/.git/**"
+    ]
+  },
+  "Chunking": {
+    "MaxChunkSizeKb": 128
+  },
+  "Output": {
+    "OutputDirectory": "./ai-output"
+  }
+}

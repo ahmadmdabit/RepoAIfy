@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 using Microsoft.Extensions.Logging;
 
@@ -15,28 +15,53 @@ namespace RepoAIfyLib
             this.logger = logger;
         }
 
-        public async Task Run(DirectoryInfo sourceDirectory, FileInfo optionsFile)
+        public async Task Run(DirectoryInfo sourceDirectory, Options options)
         {
-            var optionsLoader = new OptionsLoader();
-            var options = await optionsLoader.LoadOptions(optionsFile);
-
             if (options == null)
             {
+                logger.LogError("Options object cannot be null.");
                 return;
             }
 
             var fileProcessor = new FileProcessor(options, sourceDirectory);
-            var markdownGenerator = new MarkdownGenerator(options.Chunking.MaxChunkSizeKb);
+            var includedExtensions = new HashSet<string>(options.FileFilter.IncludedExtensions, StringComparer.OrdinalIgnoreCase);
+            var (filteredFiles, allRelativeDirectories) = fileProcessor.GetFilteredFiles(sourceDirectory, includedExtensions);
 
+            await ProcessFiles(sourceDirectory, options, filteredFiles, allRelativeDirectories);
+        }
+
+        public async Task Run(DirectoryInfo sourceDirectory, Options options, IEnumerable<string> filesToInclude)
+        {
+            if (options == null)
+            {
+                logger.LogError("Options object cannot be null.");
+                return;
+            }
+
+            var filteredFiles = filesToInclude.Select(filePath => {
+                var fileInfo = new FileInfo(filePath);
+                var relativePath = Path.GetRelativePath(sourceDirectory.FullName, fileInfo.FullName);
+                return new FileProcessor.FileInfoDetails(fileInfo, relativePath);
+            }).ToList();
+
+            var allRelativeDirectories = filteredFiles
+                .Select(f => Path.GetDirectoryName(f.RelativePath))
+                .Where(d => !string.IsNullOrEmpty(d))
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
+            await ProcessFiles(sourceDirectory, options, filteredFiles, allRelativeDirectories!);
+        }
+
+        private async Task ProcessFiles(DirectoryInfo sourceDirectory, Options options, List<FileProcessor.FileInfoDetails> filteredFiles, List<string> allRelativeDirectories)
+        {
+            var markdownGenerator = new MarkdownGenerator(options.Chunking.MaxChunkSizeKb);
             var outputDirectory = Path.Combine(Directory.GetCurrentDirectory(), options.Output.OutputDirectory ?? Constants.DefaultOutputDirectory);
             Directory.CreateDirectory(outputDirectory);
 
-            var includedExtensions = new HashSet<string>(options.FileFilter.IncludedExtensions, StringComparer.OrdinalIgnoreCase);
-
             logger.LogInformation($"Processing files from: {sourceDirectory.FullName}");
             logger.LogInformation($"Output will be written to: {outputDirectory}");
-
-            var (filteredFiles, allRelativeDirectories) = fileProcessor.GetFilteredFiles(sourceDirectory, includedExtensions);
 
             if (!filteredFiles.Any())
             {

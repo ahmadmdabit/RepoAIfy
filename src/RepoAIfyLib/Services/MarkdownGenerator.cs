@@ -14,7 +14,7 @@ public class MarkdownGenerator
         _maxChunkSizeKb = maxChunkSizeKb;
     }
 
-    public async IAsyncEnumerable<string> GenerateMarkdown(IEnumerable<(FileInfo File, string RelativePath)> files, DirectoryInfo baseDirectory)
+    public async IAsyncEnumerable<string> GenerateMarkdown(IEnumerable<FileProcessor.FileInfoDetails> files, DirectoryInfo baseDirectory)
     {
         var currentChunkContent = new StringBuilder();
         var chunkCount = 1;
