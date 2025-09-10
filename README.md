@@ -125,18 +125,26 @@ The behavior of `RepoAIfy` is controlled by the `options.json` file.
   "FileFilter": {
     "IncludedExtensions": [
       ".cs",
-      ".xaml",
+      ".vb",
+      ".fs",
       ".csproj",
       ".sln",
+      ".props",
+      ".targets",
       ".json",
+      ".config",
       ".md"
     ],
     "ExcludedDirectories": [
       "**/bin/**",
       "**/obj/**",
+      "**/node_modules/**",
+      "**/packages/**",
+      "**/.git/**",
       "**/.vs/**",
-      "**/.git/**"
-    ]
+      "**/TestResults/**"
+    ],
+    "MaxFileSizeMb": 16
   },
   "Chunking": {
     "MaxChunkSizeKb": 128
@@ -149,8 +157,13 @@ The behavior of `RepoAIfy` is controlled by the `options.json` file.
 
 *   **`IncludedExtensions`**: An array of file extensions (including the dot) to include in the processing.
 *   **`ExcludedDirectories`**: An array of glob patterns for directories to exclude. `**/` is a wildcard for any directory level.
+*   **`MaxFileSizeMb`**: The maximum size in megabytes for each input file. Files larger than this limit will be skipped to prevent memory issues. Default is 16 MB.
 *   **`MaxChunkSizeKb`**: The maximum size in kilobytes for each output markdown file.
 *   **`OutputDirectory`**: The relative path where the output files will be saved.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes to this project.
 
 ## License
 

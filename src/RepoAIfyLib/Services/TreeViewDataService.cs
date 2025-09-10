@@ -1,57 +1,78 @@
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Extensions.FileSystemGlobbing;
+using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 using RepoAIfyLib.Models;
 
 namespace RepoAIfyLib.Services
 {
     public class TreeViewDataService
     {
-        public FileSystemTree GetFileSystemTree(string rootPath, List<string> includedExtensions, List<string> excludedDirectories)
-        {
-            var includedExtensionsSet = new HashSet<string>(includedExtensions, System.StringComparer.OrdinalIgnoreCase);
-            
-            var matcher = new Matcher(System.StringComparison.OrdinalIgnoreCase);
-            matcher.AddIncludePatterns(excludedDirectories);
+        private readonly ILogger<TreeViewDataService> _logger;
 
-            var root = new FileSystemTree { Name = Path.GetFileName(rootPath), Path = rootPath, IsDirectory = true };
-            PopulateChildren(root, includedExtensionsSet, matcher, rootPath);
-            return root;
+        public TreeViewDataService(ILogger<TreeViewDataService> logger)
+        {
+            _logger = logger;
         }
 
-        private void PopulateChildren(FileSystemTree parentNode, HashSet<string> includedExtensions, Matcher matcher, string basePath)
+        public FileSystemTree GetFileSystemTree(string rootPath, List<string> includedExtensions, List<string> excludedDirectories)
         {
-            if (parentNode.Path == null) return;
+            var root = new FileSystemTree(Path.GetFileName(rootPath), rootPath, true);
+            var directoryNodes = new Dictionary<string, FileSystemTree>(System.StringComparer.OrdinalIgnoreCase)
+            {
+                { "", root } // The root node corresponds to an empty relative path
+            };
 
             try
             {
-                foreach (var directory in Directory.GetDirectories(parentNode.Path))
+                var matcher = new Matcher(System.StringComparison.OrdinalIgnoreCase);
+                // Add patterns to include files with the specified extensions.
+                matcher.AddIncludePatterns(includedExtensions.Select(ext => $"**/*{ext}"));
+                // Add patterns to exclude directories.
+                matcher.AddExcludePatterns(excludedDirectories);
+
+                // Use the high-level, correct Execute method to get all matching files.
+                var result = matcher.Execute(new DirectoryInfoWrapper(new DirectoryInfo(rootPath)));
+
+                foreach (var fileMatch in result.Files)
                 {
-                    var relativePath = Path.GetRelativePath(basePath, directory);
-                    if (matcher.Match(relativePath + Path.DirectorySeparatorChar).HasMatches) continue;
+                    // The path from the matcher uses forward slashes, which is great for consistency.
+                    string relativePath = fileMatch.Path;
+                    var pathSegments = relativePath.Split('/');
+                    
+                    FileSystemTree parentNode = root;
 
-                    var childNode = new FileSystemTree { Name = Path.GetFileName(directory), Path = directory, IsDirectory = true };
-                    parentNode.Children.Add(childNode);
-                    PopulateChildren(childNode, includedExtensions, matcher, basePath);
-                }
+                    // Create directory nodes as needed for the file's path.
+                    for (int i = 0; i < pathSegments.Length - 1; i++)
+                    {
+                        string currentPath = string.Join("/", pathSegments.Take(i + 1));
+                        string segmentName = pathSegments[i];
 
-                foreach (var file in Directory.GetFiles(parentNode.Path))
-                {
-                    var relativePath = Path.GetRelativePath(basePath, file);
-                    if (matcher.Match(relativePath).HasMatches) continue;
+                        if (!directoryNodes.TryGetValue(currentPath, out var childDirNode))
+                        {
+                            string fullDirPath = Path.Combine(rootPath, currentPath);
+                            childDirNode = new FileSystemTree(segmentName, fullDirPath, true);
+                            parentNode.Children.Add(childDirNode);
+                            directoryNodes[currentPath] = childDirNode;
+                        }
+                        parentNode = childDirNode;
+                    }
 
-                    if (!includedExtensions.Contains(Path.GetExtension(file))) continue;
-
-                    var childNode = new FileSystemTree { Name = Path.GetFileName(file), Path = file, IsDirectory = false };
-                    parentNode.Children.Add(childNode);
+                    // Add the file node.
+                    string fileName = pathSegments.Last();
+                    string fullFilePath = Path.Combine(rootPath, relativePath);
+                    var fileNode = new FileSystemTree(fileName, fullFilePath, false);
+                    parentNode.Children.Add(fileNode);
                 }
             }
             catch (Exception ex)
             {
-                // Log the exception to provide insight into why a directory might not be fully scanned.
-                // Using a simple Console.Error.WriteLine as a placeholder for a proper logging mechanism if one were injected.
-                Console.Error.WriteLine($"Could not fully access {parentNode.Path}. Reason: {ex.Message}");
+                _logger.LogWarning(ex, "Could not fully build the file system tree for {Path}", rootPath);
             }
+
+            return root;
         }
     }
 }

@@ -1,10 +1,10 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
-
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-
 using RepoAIfyLib;
-
+using RepoAIfyLib.Services;
 using Serilog;
 
 namespace RepoAIfy;
@@ -13,21 +13,36 @@ internal class Program
 {
     private static async Task<int> Main(string[] args)
     {
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .WriteTo.File("RepoAIfy.log", rollingInterval: RollingInterval.Day)
-            .CreateLogger();
+        var builder = Host.CreateApplicationBuilder(args);
+        
+        // Configure Serilog
+        builder.Services.AddSerilog(config => 
+        {
+            config.WriteTo.Console();
+            config.WriteTo.File(
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "RepoAIfy",
+                    "RepoAIfy-.log"
+                ),
+                rollingInterval: RollingInterval.Day
+            );
+        });
+
+        // Register services
+        builder.Services.AddTransient<OptionsLoader>();
+        builder.Services.AddTransient<FileProcessor>();
+        builder.Services.AddTransient<ConverterRunner>();
+        builder.Services.AddTransient<TreeViewDataService>();
+        builder.Services.AddTransient<MarkdownGenerator>();
+        builder.Services.AddTransient<Func<int, MarkdownGenerator>>(provider => 
+            (maxChunkSizeKb) => new MarkdownGenerator(provider.GetRequiredService<ILogger<MarkdownGenerator>>(), maxChunkSizeKb));
+
+        var host = builder.Build();
 
         try
         {
-            var loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder.AddSerilog();
-            });
-
-            var logger = loggerFactory.CreateLogger<ConverterRunner>();
-
-            var converterRunner = new ConverterRunner(logger);
+            var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
             var sourceDirectoryOption = new Option<DirectoryInfo>(
                 name: "--source",
@@ -54,21 +69,22 @@ internal class Program
 
                 if (sourceDirectory == null || optionsFile == null)
                 {
-                    Log.Error("Error: Source directory and options file are required.");
+                    logger.LogError("Error: Source directory and options file are required.");
                     context.ExitCode = 1;
                     return;
                 }
 
-                var optionsLoader = new RepoAIfyLib.Services.OptionsLoader();
+                var optionsLoader = host.Services.GetRequiredService<OptionsLoader>();
                 var options = await optionsLoader.LoadOptions(optionsFile);
 
                 if (options == null)
                 {
-                    Log.Error($"Error: Could not load options from {optionsFile.FullName}.");
+                    logger.LogError("Error: Could not load options from {OptionsFile}", optionsFile.FullName);
                     context.ExitCode = 1;
                     return;
                 }
 
+                var converterRunner = host.Services.GetRequiredService<ConverterRunner>();
                 await converterRunner.Run(sourceDirectory, options);
             });
 

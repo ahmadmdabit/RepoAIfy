@@ -1,4 +1,5 @@
 // RepoAIfyApp/MainWindowViewModel.cs
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -45,18 +46,23 @@ public class MainWindowViewModel : ViewModelBase
     // Services & Helpers
     private readonly Func<string?> _browseForFolder;
     private readonly Func<string?> _browseForJsonFile;
+    private readonly RepoAIfyLib.Services.OptionsLoader _optionsLoader;
+    private readonly RepoAIfyLib.Services.TreeViewDataService _treeViewDataService;
     private CancellationTokenSource? _filterCts;
 
-    public MainWindowViewModel(Func<string?> browseForFolder, Func<string?> browseForJsonFile)
+    public MainWindowViewModel(Func<string?> browseForFolder, Func<string?> browseForJsonFile, 
+        RepoAIfyLib.Services.OptionsLoader optionsLoader, RepoAIfyLib.Services.TreeViewDataService treeViewDataService)
     {
         _browseForFolder = browseForFolder;
         _browseForJsonFile = browseForJsonFile;
+        _optionsLoader = optionsLoader;
+        _treeViewDataService = treeViewDataService;
 
         BrowseSourceCommand = new RelayCommand(ExecuteBrowseSource);
-        BrowseOptionsCommand = new RelayCommand(ExecuteBrowseOptions);
-        GenerateCommand = new RelayCommand(async _ => await ExecuteGenerate(), _ => !string.IsNullOrWhiteSpace(SourceDirectory) && !string.IsNullOrWhiteSpace(OptionsFile));
+        BrowseOptionsCommand = new AsyncRelayCommand(async (obj) => await ExecuteBrowseOptions(obj));
+        GenerateCommand = new AsyncRelayCommand(async (obj) => await ExecuteGenerate(), _ => !string.IsNullOrWhiteSpace(SourceDirectory) && !string.IsNullOrWhiteSpace(OptionsFile));
 
-        LoadDefaultOptions();
+        _ = LoadDefaultOptions(); // Fire-and-forget is acceptable for initialization.
     }
 
     // Command Implementations & Logic
@@ -70,7 +76,7 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private async void ExecuteBrowseOptions(object? obj)
+    private async Task ExecuteBrowseOptions(object? obj)
     {
         var file = _browseForJsonFile();
         if (!string.IsNullOrWhiteSpace(file))
@@ -116,9 +122,9 @@ public class MainWindowViewModel : ViewModelBase
 
             await Task.Run(async () =>
             {
-                var loggerFactory = new SerilogLoggerFactory(Log.Logger);
-                var logger = loggerFactory.CreateLogger<ConverterRunner>();
-                var converterRunner = new ConverterRunner(logger);
+                // Get services from the DI container through the application
+                var services = ((App)System.Windows.Application.Current).ServiceProvider;
+                var converterRunner = services.GetRequiredService<RepoAIfyLib.ConverterRunner>();
                 await converterRunner.Run(sourceDirectoryInfo, options, includedFiles);
             });
 
@@ -140,14 +146,13 @@ public class MainWindowViewModel : ViewModelBase
         var included = IncludedExtensions.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
         var excluded = ExcludedDirectories.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 
-        var dataService = new TreeViewDataService();
-        var fileSystemTree = dataService.GetFileSystemTree(path, included, excluded);
+        var fileSystemTree = _treeViewDataService.GetFileSystemTree(path, included, excluded);
 
         var rootNode = ConvertToFileSystemNode(fileSystemTree, null);
         RootNodes = new ObservableCollection<FileSystemNode> { rootNode };
     }
     
-    private async void DebouncePopulateTreeView()
+    private async Task DebouncePopulateTreeView()
     {
         _filterCts?.Cancel();
         _filterCts = new CancellationTokenSource();
@@ -162,7 +167,7 @@ public class MainWindowViewModel : ViewModelBase
         catch (TaskCanceledException) { /* Ignore */ }
     }
 
-    private async void LoadDefaultOptions()
+    private async Task LoadDefaultOptions()
     {
         var defaultOptionsPath = Path.Combine(AppContext.BaseDirectory, "options.json");
         if (File.Exists(defaultOptionsPath))
@@ -174,8 +179,7 @@ public class MainWindowViewModel : ViewModelBase
 
     private async Task LoadOptions(string optionsFilePath)
     {
-        var optionsLoader = new OptionsLoader();
-        var options = await optionsLoader.LoadOptions(new FileInfo(optionsFilePath));
+        var options = await _optionsLoader.LoadOptions(new FileInfo(optionsFilePath));
         if (options != null)
         {
             IncludedExtensions = string.Join(", ", options.FileFilter.IncludedExtensions);

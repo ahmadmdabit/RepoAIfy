@@ -4,65 +4,140 @@ This manual provides detailed instructions on how to use the `RepoAIfy` applicat
 
 ## Table of Contents
 1.  [Introduction](#1-introduction)
-2.  [Installation](#2-installation)
-3.  [Usage](#3-usage)
-4.  [Configuration (`options.json`)](#4-configuration-optionsjson)
+2.  [Features](#2-features)
+3.  [Project Structure](#3-project-structure)
+4.  [Getting Started](#4-getting-started)
+    *   [Prerequisites](#prerequisites)
+    *   [Project Setup](#project-setup)
+    *   [Running the WPF Application](#running-the-wpf-application)
+    *   [Application Usage (Step-by-Step)](#application-usage-step-by-step)
+5.  [Advanced: Using the Console Application](#5-advanced-using-the-console-application)
+6.  [Configuration (`options.json`)](#6-configuration-optionsjson)
     *   [FileFilter](#filefilter)
     *   [Chunking](#chunking)
     *   [Output](#output)
-5.  [Examples](#5-examples)
-6.  [Troubleshooting](#6-troubleshooting)
+7.  [Examples](#7-examples)
+8.  [Troubleshooting](#8-troubleshooting)
+9.  [License](#9-license)
 
 ## 1. Introduction
 
-`RepoAIfy` is a command-line utility designed to convert the contents of multiple source files within a directory into one or more Markdown files. It's particularly useful for:
+`RepoAIfy` is a powerful .NET 9 solution designed to streamline the process of analyzing and documenting codebases. It provides two primary interfaces:
 
-*   Generating documentation from source code.
-*   Creating a consolidated view of a project's files for review.
-*   Preparing input context for AI models or other automated analysis tools.
+1.  **A user-friendly WPF Desktop Application (`RepoAIfyApp`)** for interactive file selection, real-time filtering, and visual feedback.
+2.  **A Command-Line Interface (`RepoAIfy`)** for scripting and automated workflows.
 
-## 2. Installation
+The core logic reads files from a source directory, intelligently filters them based on a user-defined `options.json` configuration, and then compiles their content into one or more well-structured Markdown files. This tool is ideal for creating comprehensive context files for AI models, generating quick documentation, or consolidating source code for review.
+
+## 2. Features
+
+*   **Dual Interface:** Choose between an intuitive WPF GUI for visual interaction or a powerful CLI for automation.
+*   **Interactive File Tree:** The WPF app displays your source directory in a tree view, allowing you to visually include or exclude specific files and folders with checkboxes.
+*   **Real-Time Filtering:** Dynamically filter the file tree in the UI by included extensions or excluded directory patterns. The view updates automatically as you type.
+*   **Configurable File Filtering:** Use glob patterns in `options.json` to define robust rules for including files by extension and excluding directories (e.g., `bin`, `obj`, `.git`).
+*   **Smart Chunking:** Automatically splits the output into multiple Markdown files based on a configurable maximum size, making outputs manageable for large repositories.
+*   **Dynamic Repository Overview:** Generates a structured, hierarchical overview of the processed files and directories and inserts it into the first output chunk for immediate context.
+*   **Live Log Output:** The WPF application provides a dedicated log panel that displays real-time processing status and errors.
+*   **Cross-Platform Core:** The core logic is built with .NET 9, with the console app being fully cross-platform. The WPF application is for Windows.
+
+## 3. Project Structure
+
+The solution is architected with a clean separation of concerns:
+
+*   `RepoAIfyLib`: A .NET class library containing all the core business logic (file processing, filtering, Markdown generation). It has no dependency on any UI framework.
+*   `RepoAIfyApp`: The primary WPF desktop application. It provides the graphical user interface and consumes `RepoAIfyLib`.
+*   `RepoAIfy`: The original console application, ideal for scripting and automation. It also consumes `RepoAIfyLib`.
+
+## 4. Getting Started
+
+This guide focuses on the primary WPF application (`RepoAIfyApp`).
 
 ### Prerequisites
 
-Ensure you have the [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) installed on your system.
+*   [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+*   [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) (Recommended for the best experience)
+*   Windows Operating System (for the WPF application)
 
-### Building the Application
+### Project Setup
 
-1.  Clone the repository or navigate to the `src` directory.
-2.  Open your terminal or command prompt.
-3.  Execute the following command to build the application:
-
+1.  **Clone the Repository:**
     ```bash
-    dotnet build D:\engamd89-dev\dotnet\RepoAIfy\src\RepoAIfy
+    git clone <repository-url>
     ```
+2.  **Open the Solution:**
+    Navigate to the `src` directory and open the `RepoAIfy.sln` file in Visual Studio 2022.
+3.  **Build the Solution:**
+    Press `Ctrl+Shift+B` or go to `Build > Build Solution` in Visual Studio. This will restore all necessary NuGet packages and compile all three projects.
 
-    This will compile the project and create the executable in the `bin/Debug/net9.0/` (or `bin/Release/net9.0/`) folder within the `RepoAIfy` project directory.
+### Running the WPF Application
 
-## 3. Usage
+1.  **Set Startup Project:** In the Solution Explorer, right-click the **`RepoAIfyApp`** project and select "Set as Startup Project".
+2.  **Run:** Press `F5` or click the "Start" button in Visual Studio to build and run the WPF application.
 
-To run the `RepoAIfy`, you need to specify two main arguments:
+### Application Usage (Step-by-Step)
 
-*   `--source <SOURCE_DIRECTORY_PATH>`: The absolute path to the directory containing the files you want to process.
-*   `--options <OPTIONS_FILE_PATH>`: The absolute path to your `options.json` configuration file.
+Upon launching, you will see the main window. Follow these steps to generate your markdown file.
 
-### Command Syntax
+**Step 1: Select a Source Directory**
+*   Click the **Browse...** button next to the "Source Directory" field.
+*   An explorer window will open. Navigate to and select the root folder of the codebase you want to analyze.
+*   Once selected, the file tree view below will automatically populate with the directories and files from that location.
 
-Navigate to the `src` directory in your terminal and use the following command structure:
+**Step 2: Load Configuration**
+*   The application automatically loads the `options.json` file located in its directory by default.
+*   The fields for extensions, excluded directories, chunk size, and output directory will be filled with the values from this file.
+*   You can optionally click the **Browse...** button next to "Options File" to load a different configuration.
+
+**Step 3: Refine File Selection**
+This is the most powerful feature of the UI. You have two ways to refine which files are included:
+*   **Interactive Tree View:**
+    *   Use the checkboxes next to each file and folder to manually include or exclude them from the output.
+    *   Checking or unchecking a folder will apply the same state to all of its children.
+*   **Live Filter Text Boxes:**
+    *   Modify the comma-separated list in the **"Included Extensions"** text box. The tree view will update automatically after you stop typing to show only files with matching extensions.
+    *   Modify the comma-separated glob patterns in the **"Excluded Directories"** text box. The tree will update to hide files and folders matching these patterns.
+
+**Step 4: Configure Output Settings**
+*   **Max Chunk Size (KB):** Adjust the maximum size for each output markdown file.
+*   **Output Directory:** Specify the folder where the generated files will be saved. This path is relative to the application's executable directory.
+
+**Step 5: Generate the Output**
+*   Click the large **Generate** button.
+*   The UI will become disabled during processing, and you will see detailed logs appear in the "Logs" panel in real-time.
+
+**Step 6: Review the Results**
+*   The **Status Bar** at the bottom will update from "Processing..." to "Processing Complete." or an error message.
+*   Navigate to the specified output directory (e.g., `src/RepoAIfyApp/bin/Debug/net9.0-windows/ai-output`) to find your generated `.md` file(s).
+
+## 5. Advanced: Using the Console Application
+
+For automation and scripting, you can use the `RepoAIfy` console application.
+
+### Build the Console App
+From the solution's `src` directory, run:
+```bash
+dotnet build RepoAIfy
+```
+This places the executable in `RepoAIfy/bin/Debug/net9.0/`.
+
+### Run the Console App
+To run the application, use the `dotnet run` command from the `src` directory. You must provide the path to your source directory and the `options.json` file.
 
 ```bash
-dotnet run --project D:\engamd89-dev\dotnet\RepoAIfy\src\RepoAIfy -- --source "D:\engamd89-dev\dotnet\RepoAIfy\src\YourSourceDirectory" --options "D:\engamd89-dev\dotnet\RepoAIfy\src\options.json"
+dotnet run --project RepoAIfy -- --source "./YourSourceDirectory" --options "./options.json"
 ```
 
-**Important:**
-*   Replace `"D:\engamd89-dev\dotnet\RepoAIfy\src\YourSourceDirectory"` with the actual absolute path to your source directory.
-*   Replace `"D:\engamd89-dev\dotnet\RepoAIfy\src\options.json"` with the actual absolute path to your `options.json` file.
+**Replace:**
+*   `"./YourSourceDirectory"` with the relative path to the directory you want to process.
+*   `"./options.json"` with the relative path to your configuration file.
+
+The output files will be created in the `ai-output` directory (or as configured in your options file).
 
 **Security Warning:** Always ensure that the `--source` directory and the `OutputDirectory` specified in `options.json` point to trusted locations. Providing untrusted paths could lead to unintended file access or modification on your system.
 
-## 4. Configuration (`options.json`)
+## 6. Configuration (`options.json`)
 
-The `options.json` file dictates how `RepoAIfy` operates. Below is a breakdown of its structure and available settings.
+The behavior of `RepoAIfy` is controlled by the `options.json` file.
 
 ```json
 {
@@ -87,7 +162,8 @@ The `options.json` file dictates how `RepoAIfy` operates. Below is a breakdown o
       "**/.git/**",
       "**/.vs/**",
       "**/TestResults/**"
-    ]
+    ],
+    "MaxFileSizeMb": 16
   },
   "Chunking": {
     "MaxChunkSizeKb": 128
@@ -98,47 +174,53 @@ The `options.json` file dictates how `RepoAIfy` operates. Below is a breakdown o
 }
 ```
 
-### FileFilter
+*   **`IncludedExtensions`**: An array of file extensions (including the dot) to include in the processing.
+*   **`ExcludedDirectories`**: An array of glob patterns for directories to exclude. `**/` is a wildcard for any directory level.
+*   **`MaxFileSizeMb`**: The maximum size in megabytes for each input file. Files larger than this limit will be skipped to prevent memory issues. Default is 16 MB.
+*   **`MaxChunkSizeKb`**: The maximum size in kilobytes for each output markdown file.
+*   **`OutputDirectory`**: The relative path where the output files will be saved.
 
-This section controls which files are included or excluded from the processing.
+## 7. Examples
 
-*   `IncludedExtensions` (array of strings): A list of file extensions (e.g., `.cs`, `.json`) that the converter should process. Only files with these extensions will be included. The comparison is case-insensitive.
-*   `ExcludedDirectories` (array of strings): A list of glob-like patterns for directories that should be excluded from the search. The current implementation uses `Microsoft.Extensions.FileSystemGlobbing` for robust pattern matching.
+### Example 1: Basic Conversion using the WPF Application
 
-### Chunking
+1.  **Launch `RepoAIfyApp`**: Run the WPF application as described in the "Running the WPF Application" section.
+2.  **Select Source Directory**: Click "Browse..." next to "Source Directory" and choose your project's root folder (e.g., `D:\dev\RepoAIfy\src\MyProject`).
+3.  **Load Options**: Ensure `options.json` is loaded (it should be by default).
+4.  **Generate**: Click the "Generate" button.
 
-This section defines how the output Markdown content is split into multiple files.
+This will create `MyProject.md` (and potentially `MyProject_2.md`, `MyProject_3.md`, etc., if chunking is active) in the output directory configured in `options.json` (e.g., `src/RepoAIfyApp/bin/Debug/net9.0-windows/ai-output`).
 
-*   `MaxChunkSizeKb` (integer): The maximum desired size (in kilobytes) for each output Markdown file. If the total content (including markdown formatting overhead) of a single file exceeds this size, that file will be placed in its own chunk, and that chunk will exceed the `MaxChunkSizeKb`. Otherwise, if adding a file would cause the current chunk to exceed the limit, a new chunk will be started. A value of `0` or a very large number effectively disables chunking, resulting in a single output file.
+### Example 2: Basic Conversion using the Console Application (with potential chunking)
 
-### Output
-
-This section defines the location of the generated output.
-
-*   `OutputDirectory` (string): The path where the output Markdown file(s) will be saved. This path is relative to the directory from which you run the `dotnet run` command. If the directory does not exist, it will be created.
-
-## 5. Examples
-
-### Example 1: Basic Conversion (with potential chunking)
-
-To convert all `.cs` and `.json` files from a source directory named `MyProject` (located at `D:\engamd89-dev\dotnet\RepoAIfy\src\MyProject`) into markdown file(s), using the default `options.json`:
+To convert all `.cs` and `.json` files from a source directory named `MyProject` (located at `D:\dev\RepoAIfy\src\MyProject`) into markdown file(s), using the default `options.json`:
 
 ```bash
-dotnet run --project D:\engamd89-dev\dotnet\RepoAIfy\src\RepoAIfy -- --source "D:\engamd89-dev\dotnet\RepoAIfy\src\MyProject" --options "D:\engamd89-dev\dotnet\RepoAIfy\src\options.json"
+dotnet run --project RepoAIfy -- --source "./YourSourceDirectory" --options "./options.json"
 ```
 
-This will create `MyProject.md` (and potentially `MyProject_2.md`, `MyProject_3.md`, etc., if chunking is active) in `D:\engamd89-dev\dotnet\RepoAIfy\src\ai-output`.
+This will create `MyProject.md` (and potentially `MyProject_2.md`, `MyProject_3.md`, etc., if chunking is active) in the `ai-output` directory (or as configured in your options file).
 
-### Example 2: Custom Output Directory and Chunk Size
+### Example 3: Custom Output Directory and Chunk Size
 
-If you modify `options.json` to set `"OutputDirectory": "./docs/generated"` and `"MaxChunkSizeKb": 512`, the output files will be saved in `D:\engamd89-dev\dotnet\RepoAIfy\src\docs\generated`, with each file not exceeding approximately 512KB (unless a single file itself is larger).
+If you modify `options.json` to set `"OutputDirectory": "./docs/generated"` and `"MaxChunkSizeKb": 512`, the output files will be saved in `D:\dev\RepoAIfy\src\docs\generated`, with each file not exceeding approximately 512KB (unless a single file itself is larger).
 
-## 6. Troubleshooting
+## 8. Troubleshooting
 
-*   **"Error: Source directory ... does not exist."**: Ensure the path provided to `--source` is an absolute and correct path to an existing directory.
-*   **"Error: Options file ... does not exist."**: Ensure the path provided to `--options` is an absolute and correct path to your `options.json` file.
+*   **"Error: Source directory ... does not exist."**: Ensure the path provided to `--source` (for CLI) or selected in the UI is an absolute and correct path to an existing directory.
+*   **"Error: Options file ... does not exist."**: Ensure the path provided to `--options` (for CLI) or loaded in the UI is an absolute and correct path to your `options.json` file.
 *   **"Error: Could not deserialize options.json."**: Check your `options.json` file for syntax errors (e.g., missing commas, unclosed brackets) and ensure it matches the expected structure.
 *   **No output file(s) generated**: Verify that your `IncludedExtensions` in `options.json` match the files in your source directory and that no directories are inadvertently excluded by `ExcludedDirectories` patterns. Also, check if the source directory is empty.
 *   **Output file is unexpectedly split**: This is likely due to the `MaxChunkSizeKb` setting in `options.json`. Adjust this value if you prefer larger or smaller chunks.
 *   **Output chunk exceeds `MaxChunkSizeKb`**: This can happen if a single source file's content (after markdown formatting) is larger than the specified `MaxChunkSizeKb`. The application will issue a warning to `Console.Error` in such cases.
+*   **WPF UI is unresponsive or frozen**: Check the "Logs" panel in the WPF application for any error messages. Long processing times for very large repositories might temporarily make the UI appear unresponsive.
 *   **Build Errors**: If you encounter build errors, ensure you have the correct .NET 9 SDK installed and that the `System.CommandLine` and `Microsoft.Extensions.FileSystemGlobbing` packages are correctly referenced in your `.csproj` file.
+*   **Large file skipped**: If you see warnings about files being skipped due to size limits, you can adjust the `MaxFileSizeMb` setting in `options.json` to allow larger files (though this may increase memory usage).
+
+## 9. License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## 10. Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes to this project.

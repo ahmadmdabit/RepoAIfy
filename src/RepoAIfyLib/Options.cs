@@ -11,6 +11,7 @@ public class FileFilter
 {
     public List<string> IncludedExtensions { get; set; } = new List<string>();
     public List<string> ExcludedDirectories { get; set; } = new List<string>();
+    public int MaxFileSizeMb { get; set; } = 16; // Default to 16 MB.
 }
 
 public class Chunking

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 using RepoAIfyLib;
@@ -6,11 +7,18 @@ namespace RepoAIfyLib.Services;
 
 public class OptionsLoader
 {
+    private readonly ILogger<OptionsLoader> _logger;
+
+    public OptionsLoader(ILogger<OptionsLoader> logger)
+    {
+        _logger = logger;
+    }
+
     public async Task<Options?> LoadOptions(FileInfo optionsFile)
     {
         if (!optionsFile.Exists)
         {
-            Console.Error.WriteLine($"Error: Options file '{optionsFile.FullName}' does not exist.");
+            _logger.LogError("Options file '{FilePath}' does not exist.", optionsFile.FullName);
             return null;
         }
 
@@ -21,20 +29,25 @@ public class OptionsLoader
 
             if (options == null)
             {
-                Console.Error.WriteLine("Error: Could not deserialize options.json. Check its content and format.");
+                _logger.LogError("Error: Could not deserialize options.json. Check its content and format.");
                 return null;
             }
 
             // Basic path validation for OutputDirectory
             if (!string.IsNullOrEmpty(options.Output.OutputDirectory))
             {
-                var normalizedOutputPath = Path.GetFullPath(options.Output.OutputDirectory);
-                // Prevent path traversal by ensuring the output directory is not outside the current working directory
-                // This is a basic check; more robust validation might be needed depending on security requirements.
-                if (!normalizedOutputPath.StartsWith(Directory.GetCurrentDirectory(), StringComparison.OrdinalIgnoreCase))
+                string sandboxRoot = Path.GetFullPath(Directory.GetCurrentDirectory());
+                string resolvedOutputPath = Path.GetFullPath(Path.Combine(sandboxRoot, options.Output.OutputDirectory));
+
+                if (!resolvedOutputPath.StartsWith(sandboxRoot, StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.Error.WriteLine($"Security Warning: Output directory '{options.Output.OutputDirectory}' attempts to write outside the current working directory. Using default output directory.");
+                    _logger.LogWarning("Security Warning: Output directory '{OutputDirectory}' resolves outside the application sandbox. Path traversal detected. Using default output directory.", options.Output.OutputDirectory);
                     options.Output.OutputDirectory = Constants.DefaultOutputDirectory;
+                }
+                else
+                {
+                    // The path is safe, so we can use the resolved, absolute path.
+                    options.Output.OutputDirectory = resolvedOutputPath;
                 }
             }
 
@@ -42,7 +55,7 @@ public class OptionsLoader
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error reading or deserializing options.json: {ex.Message}");
+            _logger.LogError(ex, "Error reading or deserializing options.json");
             return null;
         }
     }

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
 
@@ -5,6 +6,13 @@ namespace RepoAIfyLib.Services;
 
 public class FileProcessor
 {
+    private readonly ILogger<FileProcessor> _logger;
+
+    public FileProcessor(ILogger<FileProcessor> logger)
+    {
+        _logger = logger;
+    }
+
     public record FileInfoDetails(FileInfo File, string RelativePath);
 
     public (List<FileInfoDetails> FilteredFiles, List<string> AllRelativeDirectories) GetFilteredFiles(
@@ -28,7 +36,7 @@ public class FileProcessor
             var fullPath = Path.Combine(sourceDirectory.FullName, match.Path);
             var fileInfo = new FileInfo(fullPath);
             // Ensure the relative path uses forward slashes for consistency.
-            var relativePath = match.Path.Replace('\\', '/');
+            var relativePath = match.Path.Replace('/', '/');
             return new FileInfoDetails(fileInfo, relativePath);
         }).ToList();
 

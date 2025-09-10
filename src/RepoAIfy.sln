@@ -20,12 +20,12 @@ Global
 		{DA077AF1-ECB4-95A2-6221-4D0F54773832}.Release|x64.Build.0 = Release|x64
 		{F09DEDD7-7BE7-4E7D-AF1E-F699B3EED9E5}.Debug|x64.ActiveCfg = Debug|x64
 		{F09DEDD7-7BE7-4E7D-AF1E-F699B3EED9E5}.Debug|x64.Build.0 = Debug|x64
-		{F09DEDD7-7BE7-4E7D-AF1E-F699B3EED9E5}.Release|x64.ActiveCfg = Release|Any CPU
-		{F09DEDD7-7BE7-4E7D-AF1E-F699B3EED9E5}.Release|x64.Build.0 = Release|Any CPU
+		{F09DEDD7-7BE7-4E7D-AF1E-F699B3EED9E5}.Release|x64.ActiveCfg = Release|x64
+		{F09DEDD7-7BE7-4E7D-AF1E-F699B3EED9E5}.Release|x64.Build.0 = Release|x64
 		{FCCB7875-3512-46AF-9320-2EB0458A1C33}.Debug|x64.ActiveCfg = Debug|x64
 		{FCCB7875-3512-46AF-9320-2EB0458A1C33}.Debug|x64.Build.0 = Debug|x64
-		{FCCB7875-3512-46AF-9320-2EB0458A1C33}.Release|x64.ActiveCfg = Release|Any CPU
-		{FCCB7875-3512-46AF-9320-2EB0458A1C33}.Release|x64.Build.0 = Release|Any CPU
+		{FCCB7875-3512-46AF-9320-2EB0458A1C33}.Release|x64.ActiveCfg = Release|x64
+		{FCCB7875-3512-46AF-9320-2EB0458A1C33}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

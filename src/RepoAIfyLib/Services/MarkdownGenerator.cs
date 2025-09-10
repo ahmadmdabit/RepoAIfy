@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 using RepoAIfyLib;
@@ -6,25 +7,29 @@ namespace RepoAIfyLib.Services;
 
 public class MarkdownGenerator
 {
+    private readonly ILogger<MarkdownGenerator> _logger;
     private readonly int _maxChunkSizeKb;
     private const int BytesPerKb = 1024;
 
-    public MarkdownGenerator(int maxChunkSizeKb)
+    public MarkdownGenerator(ILogger<MarkdownGenerator> logger, int maxChunkSizeKb)
     {
+        _logger = logger;
         _maxChunkSizeKb = maxChunkSizeKb;
     }
 
-    public async IAsyncEnumerable<string> GenerateMarkdown(IEnumerable<FileProcessor.FileInfoDetails> files, DirectoryInfo baseDirectory, string repositoryOverview)
+    public async IAsyncEnumerable<string> GenerateMarkdown(IEnumerable<FileProcessor.FileInfoDetails> files, DirectoryInfo baseDirectory, string repositoryOverview, Options options)
     {
         var currentChunkContent = new StringBuilder();
+        long currentChunkBytes = 0;
         var chunkCount = 1;
 
-        // Generate header for the first chunk
-        var headerContent = new StringBuilder();
-        headerContent.AppendLine(GenerateHeader(baseDirectory.Name));
-        headerContent.AppendLine(repositoryOverview); // Append the overview right after the header.
-        
-        currentChunkContent.Append(headerContent);
+        // --- Initial Header for the first chunk ---
+        var firstHeader = new StringBuilder();
+        firstHeader.AppendLine(GenerateHeader(baseDirectory.Name));
+        firstHeader.AppendLine(repositoryOverview);
+        string firstHeaderString = firstHeader.ToString();
+        currentChunkContent.Append(firstHeaderString);
+        currentChunkBytes += Encoding.UTF8.GetByteCount(firstHeaderString);
 
         foreach (var fileTuple in files)
         {
@@ -33,16 +38,28 @@ public class MarkdownGenerator
             var fileExtension = file.Extension;
             var fileExtensionWithoutDot = string.IsNullOrEmpty(fileExtension) ? "" : fileExtension.Substring(1);
 
-            string fileContent;
+            // Check file size before attempting to read
+            if (options.FileFilter.MaxFileSizeMb > 0 && file.Length > options.FileFilter.MaxFileSizeMb * 1024 * 1024)
+            {
+                _logger.LogWarning("Skipping file '{RelativePath}' because its size ({FileSize} MB) exceeds the configured limit of {MaxFileSize} MB.", 
+                    relativePath, file.Length / 1024.0 / 1024.0, options.FileFilter.MaxFileSizeMb);
+                continue; // Skip to the next file
+            }
+
+            var fileContentBuilder = new StringBuilder();
             try
             {
-                fileContent = await File.ReadAllTextAsync(file.FullName);
+                // For files under the limit, we can still read them efficiently.
+                // For a full streaming implementation, you would use StreamReader here.
+                // This implementation prioritizes the size check, which is the most critical part.
+                fileContentBuilder.Append(await File.ReadAllTextAsync(file.FullName));
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Warning: Could not read file '{file.FullName}': {ex.Message}");
-                fileContent = $"Error reading file: {ex.Message}";
+                _logger.LogWarning(ex, "Could not read file '{FilePath}'", file.FullName);
+                fileContentBuilder.Append($"Error reading file: {ex.Message}");
             }
+            string fileContent = fileContentBuilder.ToString();
 
             // Generate the full markdown for the current file into a temporary string
             var fileMarkdownBuilder = new StringBuilder();
@@ -57,18 +74,22 @@ public class MarkdownGenerator
             fileMarkdownBuilder.AppendLine();
             
             string fileMarkdown = fileMarkdownBuilder.ToString();
-            int newFileBytes = Encoding.UTF8.GetByteCount(fileMarkdown);
+            long newFileBytes = Encoding.UTF8.GetByteCount(fileMarkdown);
 
-            // Check if adding the new file would exceed the limit
-            if (_maxChunkSizeKb > 0 && currentChunkContent.Length > 0 && (Encoding.UTF8.GetByteCount(currentChunkContent.ToString()) + newFileBytes) / BytesPerKb > _maxChunkSizeKb)
+            if (_maxChunkSizeKb > 0 && currentChunkBytes > 0 && (currentChunkBytes + newFileBytes) > _maxChunkSizeKb * 1024)
             {
                 yield return currentChunkContent.ToString();
-                currentChunkContent.Clear();
                 chunkCount++;
+                currentChunkContent.Clear();
+
+                // --- Continuation Header for subsequent chunks ---
+                var continuationHeader = $"# Repository Analysis: {baseDirectory.Name} (Part {chunkCount})\n\n";
+                currentChunkContent.Append(continuationHeader);
+                currentChunkBytes = Encoding.UTF8.GetByteCount(continuationHeader);
             }
 
-            // Append the new file's markdown to the current chunk
             currentChunkContent.Append(fileMarkdown);
+            currentChunkBytes += newFileBytes;
         }
 
         if (currentChunkContent.Length > 0)

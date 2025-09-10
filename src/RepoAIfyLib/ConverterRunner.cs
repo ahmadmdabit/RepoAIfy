@@ -8,23 +8,26 @@ namespace RepoAIfyLib
 {
     public class ConverterRunner
     {
-        private readonly ILogger<ConverterRunner> logger;
+        private readonly ILogger<ConverterRunner> _logger;
+        private readonly FileProcessor _fileProcessor;
+        private readonly Func<int, MarkdownGenerator> _markdownGeneratorFactory;
 
-        public ConverterRunner(ILogger<ConverterRunner> logger)
+        public ConverterRunner(ILogger<ConverterRunner> logger, FileProcessor fileProcessor, Func<int, MarkdownGenerator> markdownGeneratorFactory)
         {
-            this.logger = logger;
+            _logger = logger;
+            _fileProcessor = fileProcessor;
+            _markdownGeneratorFactory = markdownGeneratorFactory;
         }
 
         public async Task Run(DirectoryInfo sourceDirectory, Options options)
         {
             if (options == null)
             {
-                logger.LogError("Options object cannot be null.");
+                _logger.LogError("Options object cannot be null.");
                 return;
             }
 
-            var fileProcessor = new FileProcessor();
-            var (filteredFiles, allRelativeDirectories) = fileProcessor.GetFilteredFiles(
+            var (filteredFiles, allRelativeDirectories) = _fileProcessor.GetFilteredFiles(
                 sourceDirectory, 
                 options.FileFilter.IncludedExtensions, 
                 options.FileFilter.ExcludedDirectories
@@ -37,7 +40,7 @@ namespace RepoAIfyLib
         {
             if (options == null)
             {
-                logger.LogError("Options object cannot be null.");
+                _logger.LogError("Options object cannot be null.");
                 return;
             }
 
@@ -59,16 +62,16 @@ namespace RepoAIfyLib
 
         private async Task ProcessFiles(DirectoryInfo sourceDirectory, Options options, List<FileProcessor.FileInfoDetails> filteredFiles, List<string> allRelativeDirectories)
         {
-            var markdownGenerator = new MarkdownGenerator(options.Chunking.MaxChunkSizeKb);
+            var markdownGenerator = _markdownGeneratorFactory(options.Chunking.MaxChunkSizeKb);
             var outputDirectory = Path.Combine(Directory.GetCurrentDirectory(), options.Output.OutputDirectory ?? Constants.DefaultOutputDirectory);
             Directory.CreateDirectory(outputDirectory);
 
-            logger.LogInformation($"Processing files from: {sourceDirectory.FullName}");
-            logger.LogInformation($"Output will be written to: {outputDirectory}");
+            _logger.LogInformation("Processing files from: {SourceDirectory}", sourceDirectory.FullName);
+            _logger.LogInformation("Output will be written to: {OutputDirectory}", outputDirectory);
 
             if (!filteredFiles.Any())
             {
-                logger.LogWarning("No files matched the criteria. No markdown content was generated.");
+                _logger.LogWarning("No files matched the criteria. No markdown content was generated.");
                 return;
             }
 
@@ -82,12 +85,12 @@ namespace RepoAIfyLib
 
             var chunkCount = 1;
             // Pass the repositoryOverview directly into the generator method
-            await foreach (var chunkContent in markdownGenerator.GenerateMarkdown(filteredFiles, sourceDirectory, repositoryOverview))
+            await foreach (var chunkContent in markdownGenerator.GenerateMarkdown(filteredFiles, sourceDirectory, repositoryOverview, options))
             {
                 var outputFileName = chunkCount == 1 ? baseOutputFileName : $"{sourceDirectory.Name.Replace(' ', '-')}_{chunkCount}.md";
                 var outputFilePath = Path.Combine(outputDirectory, outputFileName);
                 await File.WriteAllTextAsync(outputFilePath, chunkContent);
-                logger.LogInformation($"Successfully generated markdown chunk: {outputFilePath}");
+                _logger.LogInformation("Successfully generated markdown chunk: {OutputFilePath}", outputFilePath);
                 chunkedOutputFiles.Add(outputFilePath);
                 chunkCount++;
             }

@@ -1,8 +1,9 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
-
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
+using System;
+using System.IO;
+using System.Windows;
 
 namespace RepoAIfyApp
 {
@@ -11,23 +12,61 @@ namespace RepoAIfyApp
     /// </summary>
     public partial class App : Application
     {
-        protected override void OnStartup(StartupEventArgs e)
+        private readonly IHost _host;
+
+        public IServiceProvider ServiceProvider => _host.Services;
+
+        public App()
         {
-            base.OnStartup(e);
-
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.File("RepoAIfyApp.log", rollingInterval: RollingInterval.Day)
-                .CreateLogger();
-
-            var mainWindow = new MainWindow();
-            mainWindow.Show();
+            _host = Host.CreateDefaultBuilder()
+                .ConfigureServices((context, services) =>
+                {
+                    ConfigureServices(services);
+                })
+                .UseSerilog((context, config) =>
+                {
+                    config.WriteTo.File(
+                        Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                            "RepoAIfy",
+                            "RepoAIfy-.log"
+                        ),
+                        rollingInterval: RollingInterval.Day
+                    );
+                })
+                .Build();
         }
 
-        protected override void OnExit(ExitEventArgs e)
+        private void ConfigureServices(IServiceCollection services)
         {
-            Log.CloseAndFlush();
+            // Register your services
+            services.AddSingleton<MainWindow>();
+            services.AddSingleton<MainWindowViewModel>();
+            services.AddTransient<RepoAIfyLib.Services.TreeViewDataService>();
+            services.AddTransient<RepoAIfyLib.Services.OptionsLoader>();
+            services.AddTransient<RepoAIfyLib.Services.FileProcessor>();
+            services.AddTransient<RepoAIfyLib.Services.MarkdownGenerator>();
+            services.AddTransient<RepoAIfyLib.ConverterRunner>();
+            // ... register other services from RepoAIfyLib
+        }
+
+        protected override async void OnStartup(StartupEventArgs e)
+        {
+            await _host.StartAsync();
+
+            var mainWindow = _host.Services.GetRequiredService<MainWindow>();
+            mainWindow.Show();
+
+            base.OnStartup(e);
+        }
+
+        protected override async void OnExit(ExitEventArgs e)
+        {
+            using (_host)
+            {
+                await _host.StopAsync(TimeSpan.FromSeconds(5));
+            }
             base.OnExit(e);
         }
     }
-
 }
