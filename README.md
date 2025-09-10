@@ -1,6 +1,6 @@
-# RepoAIfy
+# 🚀 RepoAIfy
 
-## Overview
+## ✨ Overview
 
 `RepoAIfy` is a powerful .NET 9 solution designed to streamline the process of analyzing and documenting codebases. It provides two primary interfaces:
 
@@ -9,7 +9,7 @@
 
 The core logic reads files from a source directory, intelligently filters them based on a user-defined `options.json` configuration, and then compiles their content into one or more well-structured Markdown files. This tool is ideal for creating comprehensive context files for AI models, generating quick documentation, or consolidating source code for review.
 
-## Features
+## 🌟 Features
 
 *   **Dual Interface:** Choose between an intuitive WPF GUI for visual interaction or a powerful CLI for automation.
 *   **Interactive File Tree:** The WPF app displays your source directory in a tree view, allowing you to visually include or exclude specific files and folders with checkboxes.
@@ -22,7 +22,7 @@ The core logic reads files from a source directory, intelligently filters them b
 *   **Markdown Preview:** The WPF application includes a built-in Markdown previewer that renders the generated files in real-time after processing is complete.
 *   **Cross-Platform Core:** The core logic is built with .NET 9, with the console app being fully cross-platform. The WPF application is for Windows.
 
-## Project Structure
+## 🏗️ Project Structure
 
 The solution is architected with a clean separation of concerns:
 
@@ -30,17 +30,17 @@ The solution is architected with a clean separation of concerns:
 *   `RepoAIfyApp`: The primary WPF desktop application, architected using the Model-View-ViewModel (MVVM) pattern. It contains separate folders for `Views`, `ViewModels`, `Models`, `Services`, and `Helpers`.
 *   `RepoAIfy`: The console application, ideal for scripting and automation. It also consumes `RepoAIfyLib`.
 
-## Getting Started & User Manual
+## ▶️ Getting Started & User Manual
 
 This guide focuses on the primary WPF application (`RepoAIfyApp`).
 
-### Prerequisites
+### 📋 Prerequisites
 
 *   [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 *   [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) (Recommended for the best experience)
 *   Windows Operating System (for the WPF application)
 
-### Project Setup
+### 🛠️ Project Setup
 
 1.  **Clone the Repository:**
     ```bash
@@ -51,12 +51,12 @@ This guide focuses on the primary WPF application (`RepoAIfyApp`).
 3.  **Build the Solution:**
     Press `Ctrl+Shift+B` or go to `Build > Build Solution` in Visual Studio. This will restore all necessary NuGet packages and compile all three projects.
 
-### Running the Application
+### 🚀 Running the Application
 
 1.  **Set Startup Project:** In the Solution Explorer, right-click the **`RepoAIfyApp`** project and select "Set as Startup Project".
 2.  **Run:** Press `F5` or click the "Start" button in Visual Studio to build and run the WPF application.
 
-### Application Usage (Step-by-Step)
+### 📝 Application Usage (Step-by-Step)
 
 Upon launching, you will see the main window. Follow these steps to generate your markdown file.
 
@@ -102,13 +102,13 @@ This is the most powerful feature of the UI. You have multiple ways to refine wh
 
 For automation and scripting, you can use the `RepoAIfy` console application.
 
-#### Build the Console App
+#### 🏗️ Build the Console App
 From the solution's `src` directory, run:
 ```bash
 dotnet build RepoAIfy
 ```
 
-#### Run the Console App
+#### ▶️ Run the Console App
 To run the application, use the `dotnet run` command from the `src` directory.
 ```bash
 dotnet run --project RepoAIfy -- --source "./YourSourceDirectory" --options "./options.json"
@@ -116,7 +116,7 @@ dotnet run --project RepoAIfy -- --source "./YourSourceDirectory" --options "./o
 
 </details>
 
-## Configuration (`options.json`)
+## ⚙️ Configuration (`options.json`)
 
 The behavior of `RepoAIfy` is controlled by the `options.json` file.
 
@@ -155,12 +155,12 @@ The behavior of `RepoAIfy` is controlled by the `options.json` file.
 *   **`MaxChunkSizeKb`**: The maximum size in kilobytes for each output markdown file.
 *   **`OutputDirectory`**: The relative path where the output files will be saved.
 
-## Documentation
+## 📚 Documentation
 
 * [User Manual](docs/User-Manual.md) - Complete guide to using the application
 * [Changelog](CHANGELOG.md) - Detailed history of changes
 * [Complete Documentation](docs/RepoAIfy-Documentation.md) - Comprehensive documentation covering all aspects of the project
 
-## License
+## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).

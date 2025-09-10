@@ -1,4 +1,4 @@
-# User Manual: RepoAIfy
+# 📖 User Manual: RepoAIfy
 
 This manual provides detailed instructions on how to use the `RepoAIfy` application, including its configuration options and expected behavior.
 
@@ -20,7 +20,7 @@ This manual provides detailed instructions on how to use the `RepoAIfy` applicat
 8.  [Troubleshooting](#8-troubleshooting)
 9.  [License](#9-license)
 
-## 1. Introduction
+## 1. ✨ Introduction
 
 `RepoAIfy` is a powerful .NET 9 solution designed to streamline the process of analyzing and documenting codebases. It provides two primary interfaces:
 
@@ -29,7 +29,7 @@ This manual provides detailed instructions on how to use the `RepoAIfy` applicat
 
 The core logic reads files from a source directory, intelligently filters them based on a user-defined `options.json` configuration, and then compiles their content into one or more well-structured Markdown files. This tool is ideal for creating comprehensive context files for AI models, generating quick documentation, or consolidating source code for review.
 
-## 2. Features
+## 2. 🌟 Features
 
 *   **Dual Interface:** Choose between an intuitive WPF GUI for visual interaction or a powerful CLI for automation.
 *   **Interactive File Tree:** The WPF app displays your source directory in a tree view, allowing you to visually include or exclude specific files and folders with checkboxes.
@@ -42,7 +42,7 @@ The core logic reads files from a source directory, intelligently filters them b
 *   **Markdown Preview:** The WPF application includes a built-in Markdown previewer that renders the generated files in real-time after processing is complete.
 *   **Cross-Platform Core:** The core logic is built with .NET 9, with the console app being fully cross-platform. The WPF application is for Windows.
 
-## 3. Project Structure
+## 3. 🏗️ Project Structure
 
 The solution is architected with a clean separation of concerns:
 
@@ -50,17 +50,17 @@ The solution is architected with a clean separation of concerns:
 *   `RepoAIfyApp`: The primary WPF desktop application, architected using the Model-View-ViewModel (MVVM) pattern. It contains separate folders for `Views`, `ViewModels`, `Models`, `Services`, and `Helpers`.
 *   `RepoAIfy`: The console application, ideal for scripting and automation. It also consumes `RepoAIfyLib`.
 
-## 4. Getting Started
+## 4. ▶️ Getting Started
 
 This guide focuses on the primary WPF application (`RepoAIfyApp`).
 
-### Prerequisites
+### 📋 Prerequisites
 
 *   [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
 *   [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) (Recommended for the best experience)
 *   Windows Operating System (for the WPF application)
 
-### Project Setup
+### 🛠️ Project Setup
 
 1.  **Clone the Repository:**
     ```bash
@@ -71,12 +71,12 @@ This guide focuses on the primary WPF application (`RepoAIfyApp`).
 3.  **Build the Solution:**
     Press `Ctrl+Shift+B` or go to `Build > Build Solution` in Visual Studio. This will restore all necessary NuGet packages and compile all three projects.
 
-### Running the WPF Application
+### 🚀 Running the WPF Application
 
 1.  **Set Startup Project:** In the Solution Explorer, right-click the **`RepoAIfyApp`** project and select "Set as Startup Project".
 2.  **Run:** Press `F5` or click the "Start" button in Visual Studio to build and run the WPF application.
 
-### Application Usage (Step-by-Step)
+### 📝 Application Usage (Step-by-Step)
 
 Upon launching, you will see the main window. Follow these steps to generate your markdown file.
 
@@ -117,18 +117,18 @@ This is the most powerful feature of the UI. You have multiple ways to refine wh
 *   Navigate to the specified output directory (e.g., `src/RepoAIfyApp/bin/Debug/net9.0-windows/ai-output`) to find your generated `.md` file(s).
 *   The new **Markdown Output** tab will automatically display the rendered content of the generated files.
 
-## 5. Advanced: Using the Console Application
+## 5. 💻 Advanced: Using the Console Application
 
 For automation and scripting, you can use the `RepoAIfy` console application.
 
-### Build the Console App
+### 🏗️ Build the Console App
 From the solution's `src` directory, run:
 ```bash
 dotnet build RepoAIfy
 ```
 This places the executable in `RepoAIfy/bin/Debug/net9.0/`.
 
-### Run the Console App
+### ▶️ Run the Console App
 To run the application, use the `dotnet run` command from the `src` directory. You must provide the path to your source directory and the `options.json` file.
 
 ```bash
@@ -143,7 +143,7 @@ The output files will be created in the `ai-output` directory (or as configured 
 
 **Security Warning:** Always ensure that the `--source` directory and the `OutputDirectory` specified in `options.json` point to trusted locations. Providing untrusted paths could lead to unintended file access or modification on your system.
 
-## 6. Configuration (`options.json`)
+## 6. ⚙️ Configuration (`options.json`)
 
 The behavior of `RepoAIfy` is controlled by the `options.json` file.
 
@@ -188,7 +188,7 @@ The behavior of `RepoAIfy` is controlled by the `options.json` file.
 *   **`MaxChunkSizeKb`**: The maximum size in kilobytes for each output markdown file.
 *   **`OutputDirectory`**: The relative path where the output files will be saved.
 
-## 7. Examples
+## 7. 💡 Examples
 
 ### Example 1: Basic Conversion using the WPF Application
 
@@ -213,7 +213,7 @@ This will create `MyProject.md` (and potentially `MyProject_2.md`, `MyProject_3.
 
 If you modify `options.json` to set `"OutputDirectory": "./docs/generated"` and `"MaxChunkSizeKb": 512`, the output files will be saved in `D:\dev\RepoAIfy\src\docs\generated`, with each file not exceeding approximately 512KB (unless a single file itself is larger).
 
-## 8. Troubleshooting
+## 8. ❓ Troubleshooting
 
 *   **"Error: Source directory ... does not exist."**: Ensure the path provided to `--source` (for CLI) or selected in the UI is an absolute and correct path to an existing directory.
 *   **"Error: Options file ... does not exist."**: Ensure the path provided to `--options` (for CLI) or loaded in the UI is an absolute and correct path to your `options.json` file.
@@ -224,6 +224,6 @@ If you modify `options.json` to set `"OutputDirectory": "./docs/generated"` and 
 *   **WPF UI is unresponsive or frozen**: Check the "Logs" panel in the WPF application for any error messages. Long processing times for very large repositories might temporarily make the UI appear unresponsive.
 *   **Build Errors**: If you encounter build errors, ensure you have the correct .NET 9 SDK installed and that the `System.CommandLine` and `Microsoft.Extensions.FileSystemGlobbing` packages are correctly referenced in your `.csproj` file.
 
-## 9. License
+## 9. 📄 License
 
 This project is licensed under the [MIT License](LICENSE).

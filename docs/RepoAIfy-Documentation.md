@@ -1,6 +1,6 @@
-# RepoAIfy Documentation
+# 📚 RepoAIfy Documentation
 
-## Project Overview
+## ✨ Project Overview
 
 RepoAIfy is a powerful .NET 9 solution designed to streamline the process of analyzing and documenting codebases. It provides two primary interfaces:
 
@@ -9,7 +9,7 @@ RepoAIfy is a powerful .NET 9 solution designed to streamline the process of ana
 
 The core logic reads files from a source directory, intelligently filters them based on a user-defined `options.json` configuration, and then compiles their content into one or more well-structured Markdown files. This tool is ideal for creating comprehensive context files for AI models, generating quick documentation, or consolidating source code for review.
 
-## Features
+## 🌟 Features
 
 *   **Dual Interface:** Choose between an intuitive WPF GUI for visual interaction or a powerful CLI for automation.
 *   **Interactive File Tree:** The WPF app displays your source directory in a tree view, allowing you to visually include or exclude specific files and folders with checkboxes.
@@ -22,7 +22,7 @@ The core logic reads files from a source directory, intelligently filters them b
 *   **Markdown Preview:** The WPF application includes a built-in Markdown previewer that renders the generated files in real-time after processing is complete.
 *   **Cross-Platform Core:** The core logic is built with .NET 9, with the console app being fully cross-platform. The WPF application is for Windows.
 
-## Project Structure
+## 🏗️ Project Structure
 
 The solution is architected with a clean separation of concerns:
 
@@ -30,24 +30,16 @@ The solution is architected with a clean separation of concerns:
 *   `RepoAIfyApp`: The primary WPF desktop application, architected using the Model-View-ViewModel (MVVM) pattern. It contains separate folders for `Views`, `ViewModels`, `Models`, `Services`, and `Helpers`.
 *   `RepoAIfy`: The console application, ideal for scripting and automation. It also consumes `RepoAIfyLib`.
 
-## Getting Started
+## ▶️ Getting Started
 
-### Prerequisites
+### 📋 Prerequisites
 *   .NET 9 SDK
 *   Visual Studio 2022 (Recommended for the best experience)
 *   Windows Operating System (for the WPF application)
 
-### WPF Application
+### 🖥️ WPF Application
 
-To build and run the `RepoAIfy` WPF application, navigate to the root of the project and run the following command:
-
-```bash
-dotnet run --project src/RepoAIfyApp
-```
-
-The application will start, and you can use the UI to select your source directory and options.
-
-### Console Application
+### 💻 Console Application
 
 The console application is available for command-line use.
 
@@ -67,35 +59,35 @@ dotnet run --project src/RepoAIfy -- --source "D:\dev\RepoAIfy\src\YourSourceDir
 
 The output markdown file(s) will be generated in the directory specified by the `OutputDirectory` setting in `options.json`.
 
-## Development Conventions
+## 🧑‍💻 Development Conventions
 
-### Architecture and Design
+### 📐 Architecture and Design
 *   **Clean Architecture:** The solution is structured to separate concerns, with UI, business logic, and data access kept in distinct projects.
 *   **SOLID Principles:** Code is written following SOLID principles to ensure it is maintainable, scalable, and testable.
 *   **Dependency Injection (DI):** Key services are managed via dependency injection using Microsoft.Extensions.Hosting.
 *   **MVVM Pattern:** The WPF application (`RepoAIfyApp`) strictly follows the MVVM pattern. The project is organized into `Views`, `ViewModels`, `Models`, `Services`, and `Helpers` directories to maintain a clean separation of concerns.
 *   **Unified Cancellation:** Long-running operations (tree view population, file generation) are fully cancellable using a unified `CancellationTokenSource` managed in the `MainWindowViewModel`. An `AppState` enum tracks the current application state (`Idle`, `PopulatingTree`, `Generating`) to provide contextual cancellation.
 
-### Code Structure
+### 📁 Code Structure
 *   **`RepoAIfyLib` (Core Logic):** A class library containing the core business logic. It is responsible for file processing, filtering, and Markdown generation. Key classes end with the `Service` suffix (e.g., `ConverterRunnerService`).
 *   **`RepoAIfyApp` (WPF):** The main user interface project, organized into `Views`, `ViewModels`, `Models`, `Services`, and `Helpers` folders.
 *   **`RepoAIfy` (Console):** The command-line interface for the tool.
 
-### Naming Conventions
+### 🏷️ Naming Conventions
 *   Follows standard Microsoft C# Naming Conventions.
 *   Service classes are post-fixed with `Service` (e.g., `OptionsLoaderService`).
 
-### Testing Strategy
+### 🧪 Testing Strategy
 *   **Unit Testing:** (Future) xUnit will be used for unit testing the core logic in `RepoAIfyLib`.
 *   **Integration Testing:** (Future) The console application can be used for integration testing the end-to-end file processing workflow.
 
-### Commit Conventions
+### 📜 Commit Conventions
 *   Commits should follow the Conventional Commits specification (e.g., `feat:`, `fix:`, `docs:`, `refactor:`).
 *   Commit messages should be clear and concise, explaining the "what" and the "why" of the change.
 
-## Key Classes and Components
+## 🧩 Key Classes and Components
 
-### Core Library (RepoAIfyLib)
+### 📦 Core Library (`RepoAIfyLib`)
 
 - **Services/ConverterRunnerService.cs**: Main processing class that orchestrates file processing and markdown generation.
 - **Services/OptionsLoaderService.cs**: Loads and validates configuration from options.json.
@@ -103,7 +95,7 @@ The output markdown file(s) will be generated in the directory specified by the 
 - **Services/MarkdownGeneratorService.cs**: Converts files to markdown format with chunking support.
 - **Services/TreeViewDataService.cs**: Provides file system data for the WPF tree view.
 
-### WPF Application (RepoAIfyApp)
+### 🖥️ WPF Application (`RepoAIfyApp`)
 
 - **Views/MainWindow.xaml**: Main application window with XAML layout.
 - **ViewModels/MainWindowViewModel.cs**: ViewModel implementing MVVM pattern with data binding. Manages application state (`AppState`) and cancellation.
@@ -111,27 +103,27 @@ The output markdown file(s) will be generated in the directory specified by the 
 - **Helpers/AsyncRelayCommand.cs**: Implementation of ICommand for safe async command handling.
 - **Services/IDialogService.cs**: Interface for abstracting UI-specific dialog functionality.
 
-### Console Application (RepoAIfy)
+### 💻 Console Application (`RepoAIfy`)
 
 - **Program.cs**: Entry point with command-line argument parsing using System.CommandLine.
 
-## Recent Improvements
+## 📈 Recent Improvements
 
 The RepoAIfy solution has been significantly enhanced with a comprehensive set of improvements. See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes.
 
-### Architectural Refactoring and Feature Enhancements (Latest)
+### 🚀 Architectural Refactoring and Feature Enhancements (Latest)
 - **Architectural Refactoring**: Reorganized the `RepoAIfyApp` project into a standard MVVM structure (`Views`, `ViewModels`, `Models`, etc.) to improve maintainability and separation of concerns.
 - **Feature: Optional File Size Display**: Added a checkbox to the UI to allow users to see the size of each file in the tree view.
 - **Feature: Unified & Contextual Cancellation**: Implemented a single "Cancel" button that can stop any long-running task, whether it is populating the file tree or generating markdown files. This is managed by a state machine (`AppState`) in the main view model.
 - **UI/UX Enhancements**: Added input validation to numeric fields to prevent errors.
 
-### Phase 1-3: Foundational Improvements
+###  foundational Improvements
 *A summary of previous improvements establishing the baseline for the current architecture.*
 1. **Security & Correctness**: Fixed path traversal, corrected glob pattern matching, and eliminated `async void` methods.
 2. **Robustness**: Added `MaxFileSizeMb` to prevent memory issues and enforced null safety in models.
 3. **Best Practices**: Centralized DI and logging, improved markdown chunking, and implemented the `IDialogService` pattern for better abstraction.
 
-## Configuration (`options.json`)
+## ⚙️ Configuration (`options.json`)
 
 The behavior of `RepoAIfy` is controlled by an `options.json` file with the following structure:
 
@@ -170,6 +162,6 @@ The behavior of `RepoAIfy` is controlled by an `options.json` file with the foll
 *   **`MaxChunkSizeKb`**: The maximum size in kilobytes for each output markdown file.
 *   **`OutputDirectory`**: The relative path where the output files will be saved.
 
-## License
+## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
