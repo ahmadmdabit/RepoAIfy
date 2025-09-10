@@ -18,6 +18,7 @@ The core logic reads files from a source directory, intelligently filters them b
 *   **Smart Chunking:** Automatically splits the output into multiple Markdown files based on a configurable maximum size, making outputs manageable for large repositories.
 *   **Dynamic Repository Overview:** Generates a structured, hierarchical overview of the processed files and directories and inserts it into the first output chunk for immediate context.
 *   **Live Log Output:** The WPF application provides a dedicated log panel that displays real-time processing status and errors.
+*   **Markdown Preview:** The WPF application now includes a built-in Markdown previewer that renders the generated files in real-time.
 *   **Cross-Platform Core:** The core logic is built with .NET 9, with the console app being fully cross-platform. The WPF application is for Windows.
 
 ## Project Structure
@@ -31,142 +32,90 @@ The solution is architected with a clean separation of concerns:
 ## Getting Started
 
 ### Prerequisites
-
-*   [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-*   [Visual Studio 2022](https://visualstudio.microsoft.com/vs/) (Recommended for the best experience)
+*   .NET 9 SDK
+*   Visual Studio 2022 (Recommended for the best experience)
 *   Windows Operating System (for the WPF application)
 
-### Project Setup
+### WPF Application
 
-1.  **Clone the Repository:**
-    ```bash
-    git clone <repository-url>
-    ```
-2.  **Open the Solution:**
-    Navigate to the `src` directory and open the `RepoAIfy.sln` file in Visual Studio 2022.
-3.  **Build the Solution:**
-    Press `Ctrl+Shift+B` or go to `Build > Build Solution` in Visual Studio. This will restore all necessary NuGet packages and compile all three projects.
+To build and run the `RepoAIfy` WPF application, navigate to the root of the project and run the following command:
 
-### Running the Application
-
-1.  **Set Startup Project:** In the Solution Explorer, right-click the **`RepoAIfyApp`** project and select "Set as Startup Project".
-2.  **Run:** Press `F5` or click the "Start" button in Visual Studio to build and run the WPF application.
-
-## Configuration (`options.json`)
-
-The behavior of `RepoAIfy` is controlled by the `options.json` file.
-
-```json
-{
-  "FileFilter": {
-    "IncludedExtensions": [
-      ".cs",
-      ".vb",
-      ".fs",
-      ".csproj",
-      ".sln",
-      ".props",
-      ".targets",
-      ".json",
-      ".config",
-      ".md"
-    ],
-    "ExcludedDirectories": [
-      "**/bin/**",
-      "**/obj/**",
-      "**/node_modules/**",
-      "**/packages/**",
-      "**/.git/**",
-      "**/.vs/**",
-      "**/TestResults/**"
-    ],
-    "MaxFileSizeMb": 16
-  },
-  "Chunking": {
-    "MaxChunkSizeKb": 128
-  },
-  "Output": {
-    "OutputDirectory": "./ai-output"
-  }
-}
+```bash
+dotnet run --project src/RepoAIfyApp
 ```
 
-*   **`IncludedExtensions`**: An array of file extensions (including the dot) to include in the processing.
-*   **`ExcludedDirectories`**: An array of glob patterns for directories to exclude. `**/` is a wildcard for any directory level.
-*   **`MaxFileSizeMb`**: The maximum size in megabytes for each input file. Files larger than this limit will be skipped to prevent memory issues. Default is 16 MB.
-*   **`MaxChunkSizeKb`**: The maximum size in kilobytes for each output markdown file.
-*   **`OutputDirectory`**: The relative path where the output files will be saved.
+The application will start, and you can use the UI to select your source directory and options.
 
-## Architectural Transformation
+### Console Application
 
-### Overview
-RepoAIfy has undergone a comprehensive architectural transformation, elevating it from a functional application to a professionally structured, maintainable, and extensible solution. All planned improvements have been implemented, resulting in a robust, production-ready application that follows modern .NET best practices.
+The original console application is still available for command-line use.
 
-### Key Improvements
+**Build**
 
-#### 1. Dependency Injection Implementation
-The most significant improvement was the implementation of proper dependency injection patterns:
+```bash
+dotnet build src/RepoAIfy
+```
 
-**Before:**
-- ViewModels directly depended on `Func<string?>` delegates for dialog operations
-- Tight coupling between View and ViewModel
-- Service Locator anti-pattern in use
+**Run**
 
-**After:**
-- Created `IDialogService` interface defining UI dialog operations
-- Implemented `WpfDialogService` as concrete WPF-specific implementation
-- ViewModels now depend on the interface rather than concrete implementations
-- Proper dependency injection throughout the application
+Remember to replace the placeholder paths with the actual absolute paths to your source directory and `options.json` file.
 
-**Benefits:**
-- Fully decoupled ViewModels from UI framework specifics
-- Completely testable with mock implementations
-- Adherence to Dependency Inversion Principle
-- Centralized service configuration
+```bash
+dotnet run --project src/RepoAIfy -- --source "D:\dev\RepoAIfy\src\YourSourceDirectory" --options "D:\dev\RepoAIfy\src\options.json"
+```
 
-#### 2. Enhanced Logging Architecture
-A new thread-safe logging relay system was implemented:
+The output markdown file(s) will be generated in the directory specified by the `OutputDirectory` setting in `options.json`.
 
-**Components Added:**
-- `UILogRelayService`: Thread-safe event broadcaster for UI log messages
-- Improved `ViewModelSink` that publishes to the relay service
-- Proper UI thread marshaling for log message updates
+## Development Conventions
 
-**Benefits:**
-- Thread safety when updating UI from background threads
-- Better separation of logging concerns
-- Improved performance and reliability
+### Architecture and Design
+*   **Clean Architecture:** The solution is structured to separate concerns, with UI, business logic, and data access kept in distinct projects.
+*   **SOLID Principles:** Code is written following SOLID principles to ensure it is maintainable, scalable, and testable.
+*   **Dependency Injection (DI):** Key services are managed via dependency injection using Microsoft.Extensions.Hosting.
+*   **MVVM Pattern:** Used in the WPF application with ViewModels and data binding
 
-#### 3. Improved Dependency Injection Configuration
-The DI container configuration was significantly enhanced:
+### Code Structure
+*   **`RepoAIfyLib` (Core Logic):** A class library containing the core business logic. It is responsible for file processing, filtering, and Markdown generation. It has no dependency on any UI framework.
+*   **`RepoAIfyApp` (WPF):** The main user interface project. It contains all UI elements (Views), and ViewModels, adhering to the MVVM pattern. It uses a custom `ViewModelSink` for logging.
+*   **`RepoAIfy` (Console):** The original command-line interface for the tool.
 
-**Changes:**
-- Proper registration of all services in `App.xaml.cs`
-- Elimination of Service Locator anti-pattern
-- Constructor injection for all ViewModels
-- Simplified `MainWindow.xaml.cs` with DI-provided ViewModel
+### Naming Conventions
+*   Follows standard Microsoft C# Naming Conventions (e.g., `PascalCase` for classes and methods, `camelCase` for local variables).
+*   UI element names in XAML are post-fixed with their type (e.g., `SourceDirectoryTextBox`, `GenerateButton`).
 
-**Benefits:**
-- Full compliance with DI principles
-- Centralized service configuration
-- Improved maintainability
-- Better testability
+### Testing Strategy
+*   **Unit Testing:** (Future) xUnit will be used for unit testing the core logic in `RepoAIfyLib`.
+*   **Integration Testing:** (Future) The console application can be used for integration testing the end-to-end file processing workflow.
 
-#### 4. Code Quality and Structure Improvements
-Several code quality enhancements were made:
+### Commit Conventions
+*   Commits should follow the Conventional Commits specification (e.g., `feat:`, `fix:`, `docs:`, `refactor:`).
+*   Commit messages should be clear and concise, explaining the "what" and the "why" of the change.
 
-**Changes:**
-- Removed unnecessary package references
-- Improved namespace organization
-- Better code commenting and documentation
-- Removal of redundant using statements
+## Key Classes and Components
 
-**Benefits:**
-- Cleaner dependencies
-- Better code organization
-- Improved readability
+### Core Library (RepoAIfyLib)
 
-## Completed Work Summary
+- **ConverterRunner**: Main processing class that orchestrates file processing and markdown generation
+- **OptionsLoader**: Loads and validates configuration from options.json
+- **FileProcessor**: Filters files based on inclusion/exclusion rules
+- **MarkdownGenerator**: Converts files to markdown format with chunking support
+- **TreeViewDataService**: Provides file system data for the WPF tree view
+
+### WPF Application (RepoAIfyApp)
+
+- **MainWindow**: Main application window with XAML layout
+- **MainWindowViewModel**: ViewModel implementing MVVM pattern with data binding
+- **FileSystemNode**: Represents a node in the file tree view with checkbox support
+- **AsyncRelayCommand**: Implementation of ICommand for safe async command handling
+- **GeneratedFileViewModel**: New ViewModel class representing a generated Markdown file
+
+### Console Application (RepoAIfy)
+
+- **Program.cs**: Entry point with command-line argument parsing using System.CommandLine
+
+## Recent Improvements
+
+The RepoAIfy solution has been significantly enhanced with a comprehensive set of improvements across three phases. See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes.
 
 ### Phase 1: Critical Security, Correctness, and Reliability Fixes ✅ COMPLETED
 1. **Security Enhancement**: Fixed critical path traversal vulnerability in OptionsLoader with robust path sandboxing ✅ DONE
@@ -187,74 +136,67 @@ Several code quality enhancements were made:
 2. **UILogRelayService**: Added thread-safe log message relaying to the UI ✅ DONE
 3. **Enhanced Logging Architecture**: Improved overall logging structure and configuration ✅ DONE
 4. **Code Quality Improvements**: Removed unnecessary dependencies and improved code organization ✅ DONE
+5. **Markdown Preview Feature**: Implemented integrated Markdown preview functionality in WPF application ✅ DONE
 
-## Key Technical Achievements
+## Configuration (`options.json`)
 
-### 1. Professional Dependency Injection Implementation
-- Eliminated Service Locator anti-pattern
-- Implemented proper constructor injection for all components
-- Created interface-based abstractions for UI operations
-- Centralized service registration in application startup
+The behavior of RepoAIfy is controlled by an `options.json` file with the following structure:
 
-### 2. Thread-Safe UI Operations
-- Implemented UILogRelayService for safe cross-thread communication
-- Proper UI thread marshaling for log message updates
-- Improved handling of background task completion
+```json
+{
+  "FileFilter": {
+    "IncludedExtensions": [
+      ".cs", ".vb", ".fs", ".csproj", ".sln", ".props", ".targets", 
+      ".json", ".config", ".md"
+    ],
+    "ExcludedDirectories": [
+      "**/bin/**", "**/obj/**", "**/node_modules/**", "**/packages/**",
+      "**/.git/**", "**/.vs/**", "**/TestResults/**"
+    ],
+    "MaxFileSizeMb": 16
+  },
+  "Chunking": {
+    "MaxChunkSizeKb": 128
+  },
+  "Output": {
+    "OutputDirectory": "./ai-output"
+  }
+}
+```
 
-### 3. Enhanced Testability
-- ViewModels can now be unit tested with mock implementations
-- Decoupled UI-specific operations through interfaces
-- Clear separation of concerns throughout the application
+*   **`IncludedExtensions`**: An array of file extensions (including the dot) to include in the processing.
+*   **`ExcludedDirectories`**: An array of glob patterns for directories to exclude. `**/` is a wildcard for any directory level.
+*   **`MaxFileSizeMb`**: The maximum size in megabytes for each input file. Files larger than this limit will be skipped to prevent memory issues. Default is 16 MB.
+*   **`MaxChunkSizeKb`**: The maximum size in kilobytes for each output markdown file.
+*   **`OutputDirectory`**: The relative path where the output files will be saved.
 
-### 4. Improved Maintainability
-- Clean separation of UI and business logic
-- Single responsibility principle adherence
-- Centralized configuration and service registration
+## Markdown Preview Feature
 
-## Quality Attributes Achieved
+The WPF application now includes a built-in Markdown preview feature that enhances the user experience by allowing users to view the generated Markdown files directly within the application.
 
-### Security
-- Protected against directory traversal attacks with robust path validation
-- Eliminated potential injection vulnerabilities
+### Feature Overview
 
-### Reliability
-- Eliminated potential crashes from unhandled exceptions
-- Prevented null-reference exceptions through proper validation
-- Added memory protection for large files
+After processing is complete, the application automatically:
+1. Reads the generated `.md` files from the output directory
+2. Creates a new tab inside the "Markdown Output" tab for each file
+3. Switches to the "Markdown Output" tab to show the rendered content
+4. Allows users to switch between different generated files using tabs
+5. Allows users to switch back to the "Logs" tab to view the processing logs
 
-### Performance
-- Efficient byte counting in markdown generator
-- Improved file processing algorithms
-- Memory protection for large files
+### Implementation Details
 
-### Maintainability
-- Clean separation of concerns
-- Interface-based abstractions for extensibility
-- Centralized service configuration
-- Clear code organization
+The feature was implemented by:
+1. Adding the `Markdig.Wpf` NuGet package for Markdown rendering
+2. Creating a `GeneratedFileViewModel` class to represent generated files
+3. Modifying the `MainWindowViewModel` to load and manage generated files
+4. Updating the `MainWindow.xaml` with a tabbed interface for logs and Markdown preview
 
-### Testability
-- Full dependency injection support
-- Interface-based components for mocking
-- Decoupled UI and business logic
+### Technical Architecture
 
-### Extensibility
-- Easy addition of new dialog types through IDialogService
-- Alternative UI implementations possible
-- Modular service architecture
+- **Data Binding**: The tabbed interface uses data binding to dynamically create tabs for each generated file
+- **Markdown Viewer**: The `MarkdownViewer` control from the `Markdig.Wpf` library renders the Markdown content
+- **UI/UX**: Clean tabbed interface that separates logs from Markdown preview with automatic switching when generation is complete
 
-## Future Roadmap
+## License
 
-With all planned improvements completed, RepoAIfy is now a production-ready solution. Future work could include:
-
-1. **Enhanced Testing Suite**: Implement comprehensive unit and integration tests
-2. **Additional UI Themes**: Support for light/dark mode switching
-3. **Performance Monitoring**: Add performance metrics and profiling capabilities
-4. **Plugin Architecture**: Support for third-party extensions
-5. **Internationalization**: Support for multiple languages
-
-## Conclusion
-
-The RepoAIfy project has successfully undergone a complete architectural transformation, resulting in a professional-grade application that exemplifies modern .NET development practices. The solution is now secure, reliable, maintainable, and extensible, positioning it well for future growth and enhancement.
-
-All planned work has been completed to the highest standards, and the application is ready for production use.
+This project is licensed under the [MIT License](LICENSE).

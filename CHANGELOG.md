@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AsyncRelayCommand for safe async command handling in WPF
 - IDialogService pattern for proper abstraction of UI-specific functionality
 - UILogRelayService for thread-safe log message relaying to the UI
+- Markdown preview feature with tabbed interface in WPF application
+- GeneratedFileViewModel to represent generated Markdown files
+- Markdig.Wpf NuGet package for Markdown rendering
 
 ### Changed
 - Improved file filtering logic with proper glob pattern matching
@@ -26,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced error handling with structured logging instead of Console.WriteLine
 - Implemented proper DI pattern for MainWindowViewModel with IDialogService abstraction
 - Improved logging architecture with thread-safe UI log relay
+- Replaced simple log TextBox with tabbed interface (Logs and Markdown Output)
 - Removed unnecessary package references for cleaner dependencies
 
 ### Fixed

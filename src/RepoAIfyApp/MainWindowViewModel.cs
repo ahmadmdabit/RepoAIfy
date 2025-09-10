@@ -27,6 +27,23 @@ public class MainWindowViewModel : ViewModelBase
     private bool _isUiEnabled = true;
     private ObservableCollection<FileSystemNode> _rootNodes = new();
 
+    // Add near the other UI-Bound Properties
+    public ObservableCollection<GeneratedFileViewModel> GeneratedFiles { get; } = new();
+
+    private GeneratedFileViewModel? _selectedGeneratedFile;
+    public GeneratedFileViewModel? SelectedGeneratedFile
+    {
+        get => _selectedGeneratedFile;
+        set => SetField(ref _selectedGeneratedFile, value);
+    }
+
+    private int _selectedTabIndex = 0;
+    public int SelectedTabIndex
+    {
+        get => _selectedTabIndex;
+        set => SetField(ref _selectedTabIndex, value);
+    }
+
     // UI-Bound Properties
     public string SourceDirectory { get => _sourceDirectory; set => SetField(ref _sourceDirectory, value); }
 
@@ -112,6 +129,8 @@ public class MainWindowViewModel : ViewModelBase
     {
         IsUiEnabled = false;
         LogOutput = string.Empty;
+        GeneratedFiles.Clear(); // Clear previous results
+        SelectedTabIndex = 0; // Switch back to the Logs tab
         StatusText = "Processing...";
 
         try
@@ -142,6 +161,8 @@ public class MainWindowViewModel : ViewModelBase
                 Output = new Output { OutputDirectory = OutputDirectory }
             };
 
+            string outputDir = options.Output.OutputDirectory; // Capture the output directory path
+
             await Task.Run(async () =>
             {
                 // Get services from the DI container through the application
@@ -149,6 +170,26 @@ public class MainWindowViewModel : ViewModelBase
                 var converterRunner = services.GetRequiredService<ConverterRunner>();
                 await converterRunner.Run(sourceDirectoryInfo, options, includedFiles);
             });
+
+            // --- START: New logic to load results ---
+            StatusText = "Loading generated files...";
+            var generatedFilePaths = Directory.GetFiles(outputDir, "*.md");
+            foreach (var filePath in generatedFilePaths.OrderBy(f => f))
+            {
+                var fileContent = await File.ReadAllTextAsync(filePath);
+                GeneratedFiles.Add(new GeneratedFileViewModel
+                {
+                    FileName = Path.GetFileName(filePath),
+                    Content = fileContent
+                });
+            }
+
+            if (GeneratedFiles.Any())
+            {
+                SelectedGeneratedFile = GeneratedFiles.First(); // Select the first file
+                SelectedTabIndex = 1; // Switch to the Markdown Preview tab
+            }
+            // --- END: New logic ---
 
             StatusText = "Processing Complete.";
         }

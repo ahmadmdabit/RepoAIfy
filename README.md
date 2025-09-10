@@ -18,6 +18,7 @@ The core logic reads files from a source directory, intelligently filters them b
 *   **Smart Chunking:** Automatically splits the output into multiple Markdown files based on a configurable maximum size, making outputs manageable for large repositories.
 *   **Dynamic Repository Overview:** Generates a structured, hierarchical overview of the processed files and directories and inserts it into the first output chunk for immediate context.
 *   **Live Log Output:** The WPF application provides a dedicated log panel that displays real-time processing status and errors.
+*   **Markdown Preview:** The WPF application now includes a built-in Markdown previewer that renders the generated files in real-time.
 *   **Cross-Platform Core:** The core logic is built with .NET 9, with the console app being fully cross-platform. The WPF application is for Windows.
 
 ## Project Structure
@@ -88,6 +89,7 @@ This is the most powerful feature of the UI. You have two ways to refine which f
 **Step 6: Review the Results**
 *   The **Status Bar** at the bottom will update from "Processing..." to "Processing Complete." or an error message.
 *   Navigate to the specified output directory (e.g., `src/RepoAIfyApp/bin/Debug/net9.0-windows/ai-output`) to find your generated `.md` file(s).
+*   The new **Markdown Output** tab will automatically display the rendered content of the generated files.
 
 <details>
 <summary><b>Advanced: Using the Console Application</b></summary>
@@ -167,6 +169,7 @@ The behavior of `RepoAIfy` is controlled by the `options.json` file.
 * [Changelog](CHANGELOG.md) - Detailed history of changes
 * [Complete Documentation](docs/RepoAIfy-Documentation.md) - Comprehensive documentation covering all aspects of the project
 * [Project Completion Summary](PROJECT-COMPLETION-SUMMARY.md) - Summary of all completed work and achievements
+* [Markdown Preview Feature](docs/Markdown-Preview-Feature.md) - Documentation for the new Markdown preview functionality
 
 ## License
 

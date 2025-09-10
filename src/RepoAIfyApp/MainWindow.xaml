@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:RepoAIfyApp"
+    xmlns:markdig="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="RepoAIfy"
     Width="800"
@@ -154,24 +155,41 @@
                     Command="{Binding GenerateCommand}"
                     Content="Generate"
                     FontWeight="Bold" />
-                <!--  Row 8: Log Output (Outside of the disabled area)  -->
-                <Label
-                    Grid.Row="8"
-                    Grid.Column="0"
-                    Margin="0,5,0,0"
-                    VerticalAlignment="Top"
-                    Content="Logs:" />
-                <TextBox
-                    Name="LogTextBox"
+                <!--  Row 8: Tabbed Output  -->
+                <TabControl
                     Grid.Row="8"
                     Grid.Column="0"
                     Grid.ColumnSpan="2"
-                    Margin="0,30,0,0"
-                    AcceptsReturn="True"
-                    IsReadOnly="True"
-                    Text="{Binding LogOutput}"
-                    TextWrapping="Wrap"
-                    VerticalScrollBarVisibility="Auto" />
+                    Margin="0,5,0,0"
+                    SelectedIndex="{Binding SelectedTabIndex}">
+                    <TabItem Header="Logs">
+                        <TextBox
+                            AcceptsReturn="True"
+                            FontFamily="Consolas"
+                            IsReadOnly="True"
+                            Text="{Binding LogOutput, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                            TextWrapping="Wrap"
+                            VerticalScrollBarVisibility="Auto" />
+                    </TabItem>
+                    <TabItem Header="Output Preview">
+                        <!--  This TabControl will display a tab for each generated file  -->
+                        <TabControl ItemsSource="{Binding GeneratedFiles}" SelectedItem="{Binding SelectedGeneratedFile}">
+                            <TabControl.ItemTemplate>
+                                <!--  This defines how the tab header looks  -->
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding FileName}" />
+                                </DataTemplate>
+                            </TabControl.ItemTemplate>
+                            <TabControl.ContentTemplate>
+                                <!--  This defines what is inside each tab  -->
+                                <DataTemplate>
+                                    <!--  The MarkdownViewer control from the Markdig.Wpf library  -->
+                                    <markdig:MarkdownViewer Markdown="{Binding Content}" />
+                                </DataTemplate>
+                            </TabControl.ContentTemplate>
+                        </TabControl>
+                    </TabItem>
+                </TabControl>
 
                 <!--  Row 9: Status Bar  -->
                 <StatusBar
