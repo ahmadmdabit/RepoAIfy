@@ -1,11 +1,9 @@
 using System.CommandLine;
-using System.CommandLine.Invocation;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-using RepoAIfyLib;
 using RepoAIfyLib.Services;
 
 using Serilog;
@@ -37,13 +35,13 @@ internal class Program
         });
 
         // Register services
-        builder.Services.AddTransient<OptionsLoader>();
-        builder.Services.AddTransient<FileProcessor>();
-        builder.Services.AddTransient<ConverterRunner>();
+        builder.Services.AddTransient<OptionsLoaderService>();
+        builder.Services.AddTransient<FileProcessorService>();
+        builder.Services.AddTransient<ConverterRunnerService>();
         builder.Services.AddTransient<TreeViewDataService>();
-        builder.Services.AddTransient<MarkdownGenerator>();
-        builder.Services.AddTransient<Func<int, MarkdownGenerator>>(provider =>
-            (maxChunkSizeKb) => new MarkdownGenerator(provider.GetRequiredService<ILogger<MarkdownGenerator>>(), maxChunkSizeKb));
+        builder.Services.AddTransient<MarkdownGeneratorService>();
+        builder.Services.AddTransient<Func<int, MarkdownGeneratorService>>(provider =>
+            (maxChunkSizeKb) => new MarkdownGeneratorService(provider.GetRequiredService<ILogger<MarkdownGeneratorService>>(), maxChunkSizeKb));
 
         var host = builder.Build();
 
@@ -69,7 +67,7 @@ internal class Program
                 optionsFileOption
             };
 
-            rootCommand.SetHandler(async (InvocationContext context) =>
+            rootCommand.SetHandler(async context =>
             {
                 var sourceDirectory = context.ParseResult.GetValueForOption(sourceDirectoryOption);
                 var optionsFile = context.ParseResult.GetValueForOption(optionsFileOption);
@@ -81,7 +79,7 @@ internal class Program
                     return;
                 }
 
-                var optionsLoader = host.Services.GetRequiredService<OptionsLoader>();
+                var optionsLoader = host.Services.GetRequiredService<OptionsLoaderService>();
                 var options = await optionsLoader.LoadOptions(optionsFile);
 
                 if (options == null)
@@ -91,7 +89,7 @@ internal class Program
                     return;
                 }
 
-                var converterRunner = host.Services.GetRequiredService<ConverterRunner>();
+                var converterRunner = host.Services.GetRequiredService<ConverterRunnerService>();
                 await converterRunner.Run(sourceDirectory, options);
             });
 

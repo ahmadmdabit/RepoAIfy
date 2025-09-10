@@ -2,33 +2,41 @@ using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
 
+using RepoAIfyLib.Models;
+
 namespace RepoAIfyLib.Services;
 
-public class OptionsLoader
+public interface IOptionsLoaderService
 {
-    private readonly ILogger<OptionsLoader> _logger;
+    Task<Options?> LoadOptions(FileInfo optionsFile);
+}
 
-    public OptionsLoader(ILogger<OptionsLoader> logger)
+public class OptionsLoaderService : IOptionsLoaderService
+{
+    private readonly ILogger<OptionsLoaderService> logger;
+    private readonly JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
+
+    public OptionsLoaderService(ILogger<OptionsLoaderService> logger)
     {
-        _logger = logger;
+        this.logger = logger;
     }
 
     public async Task<Options?> LoadOptions(FileInfo optionsFile)
     {
         if (!optionsFile.Exists)
         {
-            _logger.LogError("Options file '{FilePath}' does not exist.", optionsFile.FullName);
+            logger.LogError("Options file '{FilePath}' does not exist.", optionsFile.FullName);
             return null;
         }
 
         try
         {
             var jsonString = await File.ReadAllTextAsync(optionsFile.FullName);
-            var options = JsonSerializer.Deserialize<Options>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var options = JsonSerializer.Deserialize<Options>(jsonString, jsonOptions);
 
             if (options == null)
             {
-                _logger.LogError("Error: Could not deserialize options.json. Check its content and format.");
+                logger.LogError("Error: Could not deserialize options.json. Check its content and format.");
                 return null;
             }
 
@@ -40,7 +48,7 @@ public class OptionsLoader
 
                 if (!resolvedOutputPath.StartsWith(sandboxRoot, StringComparison.OrdinalIgnoreCase))
                 {
-                    _logger.LogWarning("Security Warning: Output directory '{OutputDirectory}' resolves outside the application sandbox. Path traversal detected. Using default output directory.", options.Output.OutputDirectory);
+                    logger.LogWarning("Security Warning: Output directory '{OutputDirectory}' resolves outside the application sandbox. Path traversal detected. Using default output directory.", options.Output.OutputDirectory);
                     options.Output.OutputDirectory = Constants.DefaultOutputDirectory;
                 }
                 else
@@ -54,7 +62,7 @@ public class OptionsLoader
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error reading or deserializing options.json");
+            logger.LogError(ex, "Error reading or deserializing options.json");
             return null;
         }
     }

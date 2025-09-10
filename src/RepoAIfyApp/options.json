@@ -14,7 +14,8 @@
       "**/obj/**",
       "**/.vs/**",
       "**/.git/**"
-    ]
+    ],
+    "MaxFileSizeMb": 16
   },
   "Chunking": {
     "MaxChunkSizeKb": 128

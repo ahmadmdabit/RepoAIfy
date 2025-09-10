@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace RepoAIfyApp;
+namespace RepoAIfyApp.Helpers;
 
 public abstract class ViewModelBase : INotifyPropertyChanged
 {

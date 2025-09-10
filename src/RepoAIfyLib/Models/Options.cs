@@ -1,4 +1,4 @@
-namespace RepoAIfyLib;
+namespace RepoAIfyLib.Models;
 
 public class Options
 {
@@ -9,8 +9,8 @@ public class Options
 
 public class FileFilter
 {
-    public List<string> IncludedExtensions { get; set; } = new List<string>();
-    public List<string> ExcludedDirectories { get; set; } = new List<string>();
+    public List<string> IncludedExtensions { get; set; } = [];
+    public List<string> ExcludedDirectories { get; set; } = [];
     public int MaxFileSizeMb { get; set; } = 16; // Default to 16 MB.
 }
 

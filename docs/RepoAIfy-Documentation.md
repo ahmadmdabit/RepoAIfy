@@ -13,12 +13,13 @@ The core logic reads files from a source directory, intelligently filters them b
 
 *   **Dual Interface:** Choose between an intuitive WPF GUI for visual interaction or a powerful CLI for automation.
 *   **Interactive File Tree:** The WPF app displays your source directory in a tree view, allowing you to visually include or exclude specific files and folders with checkboxes.
-*   **Real-Time Filtering:** Dynamically filter the file tree in the UI by included extensions or excluded directory patterns. The view updates automatically as you type.
+*   **Optional File Size Display:** Toggle the visibility of file sizes directly in the tree view to make more informed decisions about which files to include.
+*   **Real-Time & Cancellable Filtering:** Dynamically filter the file tree by included extensions or excluded directory patterns. The view updates automatically, and you can cancel the refresh at any time if it's slow.
+*   **Unified & Contextual Cancellation:** A single "Cancel" button intelligently stops whichever long-running task is active, whether it's populating the file tree or generating the markdown output.
 *   **Configurable File Filtering:** Use glob patterns in `options.json` to define robust rules for including files by extension and excluding directories (e.g., `bin`, `obj`, `.git`).
-*   **Smart Chunking:** Automatically splits the output into multiple Markdown files based on a configurable maximum size, making outputs manageable for large repositories.
-*   **Dynamic Repository Overview:** Generates a structured, hierarchical overview of the processed files and directories and inserts it into the first output chunk for immediate context.
+*   **Smart Chunking:** Automatically splits the output into multiple Markdown files based on a configurable maximum chunk size, making outputs manageable for large repositories.
 *   **Live Log Output:** The WPF application provides a dedicated log panel that displays real-time processing status and errors.
-*   **Markdown Preview:** The WPF application now includes a built-in Markdown previewer that renders the generated files in real-time.
+*   **Markdown Preview:** The WPF application includes a built-in Markdown previewer that renders the generated files in real-time after processing is complete.
 *   **Cross-Platform Core:** The core logic is built with .NET 9, with the console app being fully cross-platform. The WPF application is for Windows.
 
 ## Project Structure
@@ -26,8 +27,8 @@ The core logic reads files from a source directory, intelligently filters them b
 The solution is architected with a clean separation of concerns:
 
 *   `RepoAIfyLib`: A .NET class library containing all the core business logic (file processing, filtering, Markdown generation). It has no dependency on any UI framework.
-*   `RepoAIfyApp`: The primary WPF desktop application. It provides the graphical user interface and consumes `RepoAIfyLib`.
-*   `RepoAIfy`: The original console application, ideal for scripting and automation. It also consumes `RepoAIfyLib`.
+*   `RepoAIfyApp`: The primary WPF desktop application, architected using the Model-View-ViewModel (MVVM) pattern. It contains separate folders for `Views`, `ViewModels`, `Models`, `Services`, and `Helpers`.
+*   `RepoAIfy`: The console application, ideal for scripting and automation. It also consumes `RepoAIfyLib`.
 
 ## Getting Started
 
@@ -48,7 +49,7 @@ The application will start, and you can use the UI to select your source directo
 
 ### Console Application
 
-The original console application is still available for command-line use.
+The console application is available for command-line use.
 
 **Build**
 
@@ -72,16 +73,17 @@ The output markdown file(s) will be generated in the directory specified by the 
 *   **Clean Architecture:** The solution is structured to separate concerns, with UI, business logic, and data access kept in distinct projects.
 *   **SOLID Principles:** Code is written following SOLID principles to ensure it is maintainable, scalable, and testable.
 *   **Dependency Injection (DI):** Key services are managed via dependency injection using Microsoft.Extensions.Hosting.
-*   **MVVM Pattern:** Used in the WPF application with ViewModels and data binding
+*   **MVVM Pattern:** The WPF application (`RepoAIfyApp`) strictly follows the MVVM pattern. The project is organized into `Views`, `ViewModels`, `Models`, `Services`, and `Helpers` directories to maintain a clean separation of concerns.
+*   **Unified Cancellation:** Long-running operations (tree view population, file generation) are fully cancellable using a unified `CancellationTokenSource` managed in the `MainWindowViewModel`. An `AppState` enum tracks the current application state (`Idle`, `PopulatingTree`, `Generating`) to provide contextual cancellation.
 
 ### Code Structure
-*   **`RepoAIfyLib` (Core Logic):** A class library containing the core business logic. It is responsible for file processing, filtering, and Markdown generation. It has no dependency on any UI framework.
-*   **`RepoAIfyApp` (WPF):** The main user interface project. It contains all UI elements (Views), and ViewModels, adhering to the MVVM pattern. It uses a custom `ViewModelSink` for logging.
-*   **`RepoAIfy` (Console):** The original command-line interface for the tool.
+*   **`RepoAIfyLib` (Core Logic):** A class library containing the core business logic. It is responsible for file processing, filtering, and Markdown generation. Key classes end with the `Service` suffix (e.g., `ConverterRunnerService`).
+*   **`RepoAIfyApp` (WPF):** The main user interface project, organized into `Views`, `ViewModels`, `Models`, `Services`, and `Helpers` folders.
+*   **`RepoAIfy` (Console):** The command-line interface for the tool.
 
 ### Naming Conventions
-*   Follows standard Microsoft C# Naming Conventions (e.g., `PascalCase` for classes and methods, `camelCase` for local variables).
-*   UI element names in XAML are post-fixed with their type (e.g., `SourceDirectoryTextBox`, `GenerateButton`).
+*   Follows standard Microsoft C# Naming Conventions.
+*   Service classes are post-fixed with `Service` (e.g., `OptionsLoaderService`).
 
 ### Testing Strategy
 *   **Unit Testing:** (Future) xUnit will be used for unit testing the core logic in `RepoAIfyLib`.
@@ -95,63 +97,61 @@ The output markdown file(s) will be generated in the directory specified by the 
 
 ### Core Library (RepoAIfyLib)
 
-- **ConverterRunner**: Main processing class that orchestrates file processing and markdown generation
-- **OptionsLoader**: Loads and validates configuration from options.json
-- **FileProcessor**: Filters files based on inclusion/exclusion rules
-- **MarkdownGenerator**: Converts files to markdown format with chunking support
-- **TreeViewDataService**: Provides file system data for the WPF tree view
+- **Services/ConverterRunnerService.cs**: Main processing class that orchestrates file processing and markdown generation.
+- **Services/OptionsLoaderService.cs**: Loads and validates configuration from options.json.
+- **Services/FileProcessorService.cs**: Filters files based on inclusion/exclusion rules.
+- **Services/MarkdownGeneratorService.cs**: Converts files to markdown format with chunking support.
+- **Services/TreeViewDataService.cs**: Provides file system data for the WPF tree view.
 
 ### WPF Application (RepoAIfyApp)
 
-- **MainWindow**: Main application window with XAML layout
-- **MainWindowViewModel**: ViewModel implementing MVVM pattern with data binding
-- **FileSystemNode**: Represents a node in the file tree view with checkbox support
-- **AsyncRelayCommand**: Implementation of ICommand for safe async command handling
-- **GeneratedFileViewModel**: New ViewModel class representing a generated Markdown file
+- **Views/MainWindow.xaml**: Main application window with XAML layout.
+- **ViewModels/MainWindowViewModel.cs**: ViewModel implementing MVVM pattern with data binding. Manages application state (`AppState`) and cancellation.
+- **Models/FileSystemNode.cs**: Represents a node in the file tree view with checkbox support and a `DisplayName` for showing file sizes.
+- **Helpers/AsyncRelayCommand.cs**: Implementation of ICommand for safe async command handling.
+- **Services/IDialogService.cs**: Interface for abstracting UI-specific dialog functionality.
 
 ### Console Application (RepoAIfy)
 
-- **Program.cs**: Entry point with command-line argument parsing using System.CommandLine
+- **Program.cs**: Entry point with command-line argument parsing using System.CommandLine.
 
 ## Recent Improvements
 
-The RepoAIfy solution has been significantly enhanced with a comprehensive set of improvements across three phases. See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes.
+The RepoAIfy solution has been significantly enhanced with a comprehensive set of improvements. See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes.
 
-### Phase 1: Critical Security, Correctness, and Reliability Fixes ✅ COMPLETED
-1. **Security Enhancement**: Fixed critical path traversal vulnerability in OptionsLoader with robust path sandboxing ✅ DONE
-2. **Correctness Fix**: Corrected file filtering logic in TreeViewDataService with proper glob pattern matching ✅ DONE
-3. **Reliability Improvement**: Eliminated async void methods to prevent unhandled exceptions with AsyncRelayCommand ✅ DONE
+### Architectural Refactoring and Feature Enhancements (Latest)
+- **Architectural Refactoring**: Reorganized the `RepoAIfyApp` project into a standard MVVM structure (`Views`, `ViewModels`, `Models`, etc.) to improve maintainability and separation of concerns.
+- **Feature: Optional File Size Display**: Added a checkbox to the UI to allow users to see the size of each file in the tree view.
+- **Feature: Unified & Contextual Cancellation**: Implemented a single "Cancel" button that can stop any long-running task, whether it is populating the file tree or generating markdown files. This is managed by a state machine (`AppState`) in the main view model.
+- **UI/UX Enhancements**: Added input validation to numeric fields to prevent errors.
 
-### Phase 2: High-Impact Robustness and Performance ✅ COMPLETED
-1. **Memory Protection**: Added MaxFileSizeMb configuration option (default: 16 MB) to prevent high memory usage with large files ✅ DONE
-2. **Null Safety**: Prevented null-reference exceptions by enforcing non-nullable properties in FileSystemTree model ✅ DONE
-
-### Phase 3: Architectural Refinement and Best Practices ✅ COMPLETED
-1. **Dependency Injection**: Centralized logging and dependency injection using Microsoft.Extensions.Hosting in both WPF and Console applications ✅ DONE
-2. **Improved Chunking**: Enhanced markdown chunking logic with continuation headers and efficient byte counting ✅ DONE
-3. **Polish**: Addressed minor issues including platform targeting consistency and improved log file locations ✅ DONE
-
-### Additional Major Architectural Improvements ✅ COMPLETED
-1. **IDialogService Pattern**: Implemented proper abstraction of UI-specific functionality behind interfaces ✅ DONE
-2. **UILogRelayService**: Added thread-safe log message relaying to the UI ✅ DONE
-3. **Enhanced Logging Architecture**: Improved overall logging structure and configuration ✅ DONE
-4. **Code Quality Improvements**: Removed unnecessary dependencies and improved code organization ✅ DONE
-5. **Markdown Preview Feature**: Implemented integrated Markdown preview functionality in WPF application ✅ DONE
+### Phase 1-3: Foundational Improvements
+*A summary of previous improvements establishing the baseline for the current architecture.*
+1. **Security & Correctness**: Fixed path traversal, corrected glob pattern matching, and eliminated `async void` methods.
+2. **Robustness**: Added `MaxFileSizeMb` to prevent memory issues and enforced null safety in models.
+3. **Best Practices**: Centralized DI and logging, improved markdown chunking, and implemented the `IDialogService` pattern for better abstraction.
 
 ## Configuration (`options.json`)
 
-The behavior of RepoAIfy is controlled by an `options.json` file with the following structure:
+The behavior of `RepoAIfy` is controlled by an `options.json` file with the following structure:
 
 ```json
 {
   "FileFilter": {
     "IncludedExtensions": [
-      ".cs", ".vb", ".fs", ".csproj", ".sln", ".props", ".targets", 
-      ".json", ".config", ".md"
+      ".cs",
+      ".csproj",
+      ".sln",
+      ".json",
+      ".md",
+      ".xaml",
+      ".xaml.cs"
     ],
     "ExcludedDirectories": [
-      "**/bin/**", "**/obj/**", "**/node_modules/**", "**/packages/**",
-      "**/.git/**", "**/.vs/**", "**/TestResults/**"
+      "**/bin/",
+      "**/obj/",
+      "**/.vs/",
+      "**/.git/"
     ],
     "MaxFileSizeMb": 16
   },
@@ -164,38 +164,11 @@ The behavior of RepoAIfy is controlled by an `options.json` file with the follow
 }
 ```
 
-*   **`IncludedExtensions`**: An array of file extensions (including the dot) to include in the processing.
-*   **`ExcludedDirectories`**: An array of glob patterns for directories to exclude. `**/` is a wildcard for any directory level.
-*   **`MaxFileSizeMb`**: The maximum size in megabytes for each input file. Files larger than this limit will be skipped to prevent memory issues. Default is 16 MB.
+*   **`IncludedExtensions`**: An array of file extensions to include.
+*   **`ExcludedDirectories`**: An array of glob patterns for directories to exclude. **Note:** Patterns must end with a `/` to correctly match directories.
+*   **`MaxFileSizeMb`**: The maximum size in megabytes for any single file to be processed. Files larger than this are skipped to prevent high memory usage.
 *   **`MaxChunkSizeKb`**: The maximum size in kilobytes for each output markdown file.
 *   **`OutputDirectory`**: The relative path where the output files will be saved.
-
-## Markdown Preview Feature
-
-The WPF application now includes a built-in Markdown preview feature that enhances the user experience by allowing users to view the generated Markdown files directly within the application.
-
-### Feature Overview
-
-After processing is complete, the application automatically:
-1. Reads the generated `.md` files from the output directory
-2. Creates a new tab inside the "Markdown Output" tab for each file
-3. Switches to the "Markdown Output" tab to show the rendered content
-4. Allows users to switch between different generated files using tabs
-5. Allows users to switch back to the "Logs" tab to view the processing logs
-
-### Implementation Details
-
-The feature was implemented by:
-1. Adding the `Markdig.Wpf` NuGet package for Markdown rendering
-2. Creating a `GeneratedFileViewModel` class to represent generated files
-3. Modifying the `MainWindowViewModel` to load and manage generated files
-4. Updating the `MainWindow.xaml` with a tabbed interface for logs and Markdown preview
-
-### Technical Architecture
-
-- **Data Binding**: The tabbed interface uses data binding to dynamically create tabs for each generated file
-- **Markdown Viewer**: The `MarkdownViewer` control from the `Markdig.Wpf` library renders the Markdown content
-- **UI/UX**: Clean tabbed interface that separates logs from Markdown preview with automatic switching when generation is complete
 
 ## License
 

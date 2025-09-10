@@ -2,18 +2,18 @@ using System.Windows.Input;
 
 using Serilog;
 
-namespace RepoAIfyApp;
+namespace RepoAIfyApp.Helpers;
 
 public class AsyncRelayCommand : ICommand
 {
-    private readonly Func<object?, Task> _execute;
-    private readonly Predicate<object?>? _canExecute;
-    private bool _isExecuting;
+    private readonly Func<object?, Task> execute;
+    private readonly Predicate<object?>? canExecute;
+    private bool isExecuting;
 
     public AsyncRelayCommand(Func<object?, Task> execute, Predicate<object?>? canExecute = null)
     {
-        _execute = execute;
-        _canExecute = canExecute;
+        this.execute = execute;
+        this.canExecute = canExecute;
     }
 
     public event EventHandler? CanExecuteChanged
@@ -24,16 +24,16 @@ public class AsyncRelayCommand : ICommand
 
     public bool CanExecute(object? parameter)
     {
-        return !_isExecuting && (_canExecute == null || _canExecute(parameter));
+        return !isExecuting && (canExecute == null || canExecute(parameter));
     }
 
     public async void Execute(object? parameter)
     {
-        _isExecuting = true;
+        isExecuting = true;
         CommandManager.InvalidateRequerySuggested();
         try
         {
-            await _execute(parameter);
+            await execute(parameter);
         }
         catch (Exception ex)
         {
@@ -42,7 +42,7 @@ public class AsyncRelayCommand : ICommand
         }
         finally
         {
-            _isExecuting = false;
+            isExecuting = false;
             CommandManager.InvalidateRequerySuggested();
         }
     }

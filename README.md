@@ -13,12 +13,13 @@ The core logic reads files from a source directory, intelligently filters them b
 
 *   **Dual Interface:** Choose between an intuitive WPF GUI for visual interaction or a powerful CLI for automation.
 *   **Interactive File Tree:** The WPF app displays your source directory in a tree view, allowing you to visually include or exclude specific files and folders with checkboxes.
-*   **Real-Time Filtering:** Dynamically filter the file tree in the UI by included extensions or excluded directory patterns. The view updates automatically as you type.
+*   **Optional File Size Display:** Toggle the visibility of file sizes directly in the tree view to make more informed decisions about which files to include.
+*   **Real-Time & Cancellable Filtering:** Dynamically filter the file tree by included extensions or excluded directory patterns. The view updates automatically, and you can cancel the refresh at any time if it's slow.
+*   **Unified & Contextual Cancellation:** A single "Cancel" button intelligently stops whichever long-running task is active, whether it's populating the file tree or generating the markdown output.
 *   **Configurable File Filtering:** Use glob patterns in `options.json` to define robust rules for including files by extension and excluding directories (e.g., `bin`, `obj`, `.git`).
-*   **Smart Chunking:** Automatically splits the output into multiple Markdown files based on a configurable maximum size, making outputs manageable for large repositories.
-*   **Dynamic Repository Overview:** Generates a structured, hierarchical overview of the processed files and directories and inserts it into the first output chunk for immediate context.
+*   **Smart Chunking:** Automatically splits the output into multiple Markdown files based on a configurable maximum chunk size, making outputs manageable for large repositories.
 *   **Live Log Output:** The WPF application provides a dedicated log panel that displays real-time processing status and errors.
-*   **Markdown Preview:** The WPF application now includes a built-in Markdown previewer that renders the generated files in real-time.
+*   **Markdown Preview:** The WPF application includes a built-in Markdown previewer that renders the generated files in real-time after processing is complete.
 *   **Cross-Platform Core:** The core logic is built with .NET 9, with the console app being fully cross-platform. The WPF application is for Windows.
 
 ## Project Structure
@@ -26,8 +27,8 @@ The core logic reads files from a source directory, intelligently filters them b
 The solution is architected with a clean separation of concerns:
 
 *   `RepoAIfyLib`: A .NET class library containing all the core business logic (file processing, filtering, Markdown generation). It has no dependency on any UI framework.
-*   `RepoAIfyApp`: The primary WPF desktop application. It provides the graphical user interface and consumes `RepoAIfyLib`.
-*   `RepoAIfy`: The original console application, ideal for scripting and automation. It also consumes `RepoAIfyLib`.
+*   `RepoAIfyApp`: The primary WPF desktop application, architected using the Model-View-ViewModel (MVVM) pattern. It contains separate folders for `Views`, `ViewModels`, `Models`, `Services`, and `Helpers`.
+*   `RepoAIfy`: The console application, ideal for scripting and automation. It also consumes `RepoAIfyLib`.
 
 ## Getting Started & User Manual
 
@@ -62,7 +63,7 @@ Upon launching, you will see the main window. Follow these steps to generate you
 **Step 1: Select a Source Directory**
 *   Click the **Browse...** button next to the "Source Directory" field.
 *   An explorer window will open. Navigate to and select the root folder of the codebase you want to analyze.
-*   Once selected, the file tree view below will automatically populate with the directories and files from that location.
+*   Once selected, the file tree view below will automatically populate. If this takes too long, you can click the **Cancel** button.
 
 **Step 2: Load Configuration**
 *   The application automatically loads the `options.json` file located in its directory by default.
@@ -70,26 +71,31 @@ Upon launching, you will see the main window. Follow these steps to generate you
 *   You can optionally click the **Browse...** button next to "Options File" to load a different configuration.
 
 **Step 3: Refine File Selection**
-This is the most powerful feature of the UI. You have two ways to refine which files are included:
+This is the most powerful feature of the UI. You have multiple ways to refine which files are included:
 *   **Interactive Tree View:**
     *   Use the checkboxes next to each file and folder to manually include or exclude them from the output.
     *   Checking or unchecking a folder will apply the same state to all of its children.
 *   **Live Filter Text Boxes:**
-    *   Modify the comma-separated list in the **"Included Extensions"** text box. The tree view will update automatically after you stop typing to show only files with matching extensions.
-    *   Modify the comma-separated glob patterns in the **"Excluded Directories"** text box. The tree will update to hide files and folders matching these patterns.
+    *   Modify the comma-separated list in the **"Included Extensions"** text box.
+    *   Modify the comma-separated glob patterns in the **"Excluded Directories"** text box.
+    *   The tree view will automatically refresh as you make changes. This refresh can be cancelled if needed.
+*   **Show File Sizes:**
+    *   Check the **"Show file sizes in tree"** box to display the size of each file, helping you identify large files to potentially exclude.
 
 **Step 4: Configure Output Settings**
-*   **Max Chunk Size (KB):** Adjust the maximum size for each output markdown file.
+*   **Max Chunk Size (KB) / Max File Size (MB):** Adjust the size limits for output chunks and input files. These fields only accept numbers.
 *   **Output Directory:** Specify the folder where the generated files will be saved. This path is relative to the application's executable directory.
 
 **Step 5: Generate the Output**
 *   Click the large **Generate** button.
-*   The UI will become disabled during processing, and you will see detailed logs appear in the "Logs" panel in real-time.
+*   The UI will update: the "Generate" button will be disabled, and the **Cancel** button will be enabled.
+*   If the process is taking too long, you can click **Cancel** to safely interrupt the operation.
+*   You will see detailed logs appear in the "Logs" panel in real-time.
 
 **Step 6: Review the Results**
-*   The **Status Bar** at the bottom will update from "Processing..." to "Processing Complete." or an error message.
-*   Navigate to the specified output directory (e.g., `src/RepoAIfyApp/bin/Debug/net9.0-windows/ai-output`) to find your generated `.md` file(s).
-*   The new **Markdown Output** tab will automatically display the rendered content of the generated files.
+*   The Status Bar at the bottom will update to "Processing Complete," "Processing Canceled," or an error message.
+*   The new Markdown Output tab will automatically display the rendered content of the generated files.
+*   You can also navigate to the specified output directory (e.g., src/RepoAIfyApp/bin/Debug/net9.0-windows/ai-output) to find your generated .md file(s).
 
 <details>
 <summary><b>Advanced: Using the Console Application</b></summary>
@@ -101,20 +107,12 @@ From the solution's `src` directory, run:
 ```bash
 dotnet build RepoAIfy
 ```
-This places the executable in `RepoAIfy/bin/Debug/net9.0/`.
 
 #### Run the Console App
-To run the application, use the `dotnet run` command from the `src` directory. You must provide the path to your source directory and the `options.json` file.
-
+To run the application, use the `dotnet run` command from the `src` directory.
 ```bash
 dotnet run --project RepoAIfy -- --source "./YourSourceDirectory" --options "./options.json"
 ```
-
-**Replace:**
-*   `"./YourSourceDirectory"` with the relative path to the directory you want to process.
-*   `"./options.json"` with the relative path to your configuration file.
-
-The output files will be created in the `ai-output` directory (or as configured in your options file).
 
 </details>
 
@@ -127,24 +125,18 @@ The behavior of `RepoAIfy` is controlled by the `options.json` file.
   "FileFilter": {
     "IncludedExtensions": [
       ".cs",
-      ".vb",
-      ".fs",
       ".csproj",
       ".sln",
-      ".props",
-      ".targets",
       ".json",
-      ".config",
-      ".md"
+      ".md",
+      ".xaml",
+      ".xaml.cs"
     ],
     "ExcludedDirectories": [
-      "**/bin/**",
-      "**/obj/**",
-      "**/node_modules/**",
-      "**/packages/**",
-      "**/.git/**",
-      "**/.vs/**",
-      "**/TestResults/**"
+      "**/bin/",
+      "**/obj/",
+      "**/.vs/",
+      "**/.git/"
     ],
     "MaxFileSizeMb": 16
   },
@@ -157,19 +149,17 @@ The behavior of `RepoAIfy` is controlled by the `options.json` file.
 }
 ```
 
-*   **`IncludedExtensions`**: An array of file extensions (including the dot) to include in the processing.
-*   **`ExcludedDirectories`**: An array of glob patterns for directories to exclude. `**/` is a wildcard for any directory level.
-*   **`MaxFileSizeMb`**: The maximum size in megabytes for each input file. Files larger than this limit will be skipped to prevent memory issues. Default is 16 MB.
+*   **`IncludedExtensions`**: An array of file extensions to include.
+*   **`ExcludedDirectories`**: An array of glob patterns for directories to exclude. **Note:** Patterns must end with a `/` to correctly match directories.
+*   **`MaxFileSizeMb`**: The maximum size in megabytes for any single file to be processed. Files larger than this are skipped to prevent high memory usage.
 *   **`MaxChunkSizeKb`**: The maximum size in kilobytes for each output markdown file.
 *   **`OutputDirectory`**: The relative path where the output files will be saved.
 
 ## Documentation
 
-* [User Manual](user-manual.md) - Complete guide to using the application
+* [User Manual](docs/User-Manual.md) - Complete guide to using the application
 * [Changelog](CHANGELOG.md) - Detailed history of changes
 * [Complete Documentation](docs/RepoAIfy-Documentation.md) - Comprehensive documentation covering all aspects of the project
-* [Project Completion Summary](PROJECT-COMPLETION-SUMMARY.md) - Summary of all completed work and achievements
-* [Markdown Preview Feature](docs/Markdown-Preview-Feature.md) - Documentation for the new Markdown preview functionality
 
 ## License
 

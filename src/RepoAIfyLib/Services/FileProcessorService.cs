@@ -4,13 +4,18 @@ using Microsoft.Extensions.Logging;
 
 namespace RepoAIfyLib.Services;
 
-public class FileProcessor
+public interface IFileProcessorService
 {
-    private readonly ILogger<FileProcessor> _logger;
+    (List<FileProcessorService.FileInfoDetails> FilteredFiles, List<string> AllRelativeDirectories) GetFilteredFiles(DirectoryInfo sourceDirectory, IEnumerable<string> includedExtensions, IEnumerable<string> excludedDirectoryPatterns);
+}
 
-    public FileProcessor(ILogger<FileProcessor> logger)
+public class FileProcessorService : IFileProcessorService
+{
+    private readonly ILogger<FileProcessorService> logger;
+
+    public FileProcessorService(ILogger<FileProcessorService> logger)
     {
-        _logger = logger;
+        this.logger = logger;
     }
 
     public record FileInfoDetails(FileInfo File, string RelativePath);
@@ -36,7 +41,7 @@ public class FileProcessor
             var fullPath = Path.Combine(sourceDirectory.FullName, match.Path);
             var fileInfo = new FileInfo(fullPath);
             // Ensure the relative path uses forward slashes for consistency.
-            var relativePath = match.Path.Replace('/', '/');
+            var relativePath = match.Path.Replace('\\', '/');
             return new FileInfoDetails(fileInfo, relativePath);
         }).ToList();
 
@@ -52,11 +57,11 @@ public class FileProcessor
             }
         }
         // Add the root directory itself.
-        if (filteredFiles.Any())
+        if (filteredFiles.Count != 0)
         {
             allRelativeDirectories.Add(".");
         }
 
-        return (filteredFiles, allRelativeDirectories.OrderBy(x => x).ToList());
+        return (filteredFiles, allRelativeDirectories.Order().ToList());
     }
 }

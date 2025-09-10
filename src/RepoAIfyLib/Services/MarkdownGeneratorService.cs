@@ -1,22 +1,36 @@
+using System.Runtime.CompilerServices;
 using System.Text;
 
 using Microsoft.Extensions.Logging;
 
+using RepoAIfyLib.Models;
+
 namespace RepoAIfyLib.Services;
 
-public class MarkdownGenerator
+public interface IMarkdownGeneratorService
 {
-    private readonly ILogger<MarkdownGenerator> _logger;
-    private readonly int _maxChunkSizeKb;
+    IAsyncEnumerable<string> GenerateMarkdown(IEnumerable<FileProcessorService.FileInfoDetails> files, DirectoryInfo baseDirectory, string repositoryOverview, Options options, CancellationToken cancellationToken = default);
+    string GenerateRepositoryStructureOverview(IEnumerable<string> relativeFilePaths, IEnumerable<string> allRelativeDirectoryPaths);
+}
+
+public class MarkdownGeneratorService : IMarkdownGeneratorService
+{
+    private readonly ILogger<MarkdownGeneratorService> logger;
+    private readonly int maxChunkSizeKb;
     private const int BytesPerKb = 1024;
 
-    public MarkdownGenerator(ILogger<MarkdownGenerator> logger, int maxChunkSizeKb)
+    public MarkdownGeneratorService(ILogger<MarkdownGeneratorService> logger, int maxChunkSizeKb)
     {
-        _logger = logger;
-        _maxChunkSizeKb = maxChunkSizeKb;
+        this.logger = logger;
+        this.maxChunkSizeKb = maxChunkSizeKb;
     }
 
-    public async IAsyncEnumerable<string> GenerateMarkdown(IEnumerable<FileProcessor.FileInfoDetails> files, DirectoryInfo baseDirectory, string repositoryOverview, Options options)
+    public async IAsyncEnumerable<string> GenerateMarkdown(
+        IEnumerable<FileProcessorService.FileInfoDetails> files,
+        DirectoryInfo baseDirectory,
+        string repositoryOverview,
+        Options options,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var currentChunkContent = new StringBuilder();
         long currentChunkBytes = 0;
@@ -32,6 +46,8 @@ public class MarkdownGenerator
 
         foreach (var fileTuple in files)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var file = fileTuple.File;
             var relativePath = fileTuple.RelativePath;
             var fileExtension = file.Extension;
@@ -40,7 +56,7 @@ public class MarkdownGenerator
             // Check file size before attempting to read
             if (options.FileFilter.MaxFileSizeMb > 0 && file.Length > options.FileFilter.MaxFileSizeMb * 1024 * 1024)
             {
-                _logger.LogWarning("Skipping file '{RelativePath}' because its size ({FileSize} MB) exceeds the configured limit of {MaxFileSize} MB.",
+                logger.LogWarning("Skipping file '{RelativePath}' because its size ({FileSize} MB) exceeds the configured limit of {MaxFileSize} MB.",
                     relativePath, file.Length / 1024.0 / 1024.0, options.FileFilter.MaxFileSizeMb);
                 continue; // Skip to the next file
             }
@@ -51,11 +67,11 @@ public class MarkdownGenerator
                 // For files under the limit, we can still read them efficiently.
                 // For a full streaming implementation, you would use StreamReader here.
                 // This implementation prioritizes the size check, which is the most critical part.
-                fileContentBuilder.Append(await File.ReadAllTextAsync(file.FullName));
+                fileContentBuilder.Append(await File.ReadAllTextAsync(file.FullName, cancellationToken));
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Could not read file '{FilePath}'", file.FullName);
+                logger.LogWarning(ex, "Could not read file '{FilePath}'", file.FullName);
                 fileContentBuilder.Append($"Error reading file: {ex.Message}");
             }
             string fileContent = fileContentBuilder.ToString();
@@ -75,7 +91,7 @@ public class MarkdownGenerator
             string fileMarkdown = fileMarkdownBuilder.ToString();
             long newFileBytes = Encoding.UTF8.GetByteCount(fileMarkdown);
 
-            if (_maxChunkSizeKb > 0 && currentChunkBytes > 0 && (currentChunkBytes + newFileBytes) > _maxChunkSizeKb * 1024)
+            if (maxChunkSizeKb > 0 && currentChunkBytes > 0 && (currentChunkBytes + newFileBytes) > maxChunkSizeKb * 1024)
             {
                 yield return currentChunkContent.ToString();
                 chunkCount++;
@@ -123,7 +139,7 @@ public class MarkdownGenerator
 
         var sortedPaths = allPaths.OrderBy(p => p, StringComparer.OrdinalIgnoreCase).ToList();
 
-        var lastPathSegments = new string[0];
+        var lastPathSegments = Array.Empty<string>();
 
         foreach (var path in sortedPaths)
         {
