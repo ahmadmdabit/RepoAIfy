@@ -1,5 +1,3 @@
-using System.Text;
-
 using Microsoft.Extensions.Logging;
 
 using RepoAIfyLib.Services;
@@ -28,8 +26,8 @@ namespace RepoAIfyLib
             }
 
             var (filteredFiles, allRelativeDirectories) = _fileProcessor.GetFilteredFiles(
-                sourceDirectory, 
-                options.FileFilter.IncludedExtensions, 
+                sourceDirectory,
+                options.FileFilter.IncludedExtensions,
                 options.FileFilter.ExcludedDirectories
             );
 
@@ -44,7 +42,8 @@ namespace RepoAIfyLib
                 return;
             }
 
-            var filteredFiles = filesToInclude.Select(filePath => {
+            var filteredFiles = filesToInclude.Select(filePath =>
+            {
                 var fileInfo = new FileInfo(filePath);
                 var relativePath = Path.GetRelativePath(sourceDirectory.FullName, fileInfo.FullName);
                 return new FileProcessor.FileInfoDetails(fileInfo, relativePath);

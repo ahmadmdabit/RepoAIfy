@@ -1,4 +1,3 @@
-// RepoAIfyApp/RelayCommand.cs
 using System.Windows.Input;
 
 namespace RepoAIfyApp;

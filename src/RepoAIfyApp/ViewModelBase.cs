@@ -1,4 +1,3 @@
-// RepoAIfyApp/ViewModelBase.cs
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 

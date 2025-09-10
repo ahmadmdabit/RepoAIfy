@@ -1,4 +1,3 @@
-// RepoAIfyApp/ViewModelSink.cs
 using Serilog.Core;
 using Serilog.Events;
 
@@ -6,18 +5,18 @@ namespace RepoAIfyApp;
 
 public class ViewModelSink : ILogEventSink
 {
-    private readonly Action<string> _logAction;
+    private readonly UILogRelayService _logRelay;
     private readonly IFormatProvider? _formatProvider;
 
-    public ViewModelSink(Action<string> logAction, IFormatProvider? formatProvider = null)
+    public ViewModelSink(UILogRelayService logRelay, IFormatProvider? formatProvider = null)
     {
-        _logAction = logAction;
+        _logRelay = logRelay;
         _formatProvider = formatProvider;
     }
 
     public void Emit(LogEvent logEvent)
     {
         var message = logEvent.RenderMessage(_formatProvider);
-        _logAction(message);
+        _logRelay.Publish(message); // Send the message to the relay.
     }
 }

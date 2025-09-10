@@ -161,9 +161,12 @@ The behavior of `RepoAIfy` is controlled by the `options.json` file.
 *   **`MaxChunkSizeKb`**: The maximum size in kilobytes for each output markdown file.
 *   **`OutputDirectory`**: The relative path where the output files will be saved.
 
-## Changelog
+## Documentation
 
-See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes to this project.
+* [User Manual](user-manual.md) - Complete guide to using the application
+* [Changelog](CHANGELOG.md) - Detailed history of changes
+* [Complete Documentation](docs/RepoAIfy-Documentation.md) - Comprehensive documentation covering all aspects of the project
+* [Project Completion Summary](PROJECT-COMPLETION-SUMMARY.md) - Summary of all completed work and achievements
 
 ## License
 

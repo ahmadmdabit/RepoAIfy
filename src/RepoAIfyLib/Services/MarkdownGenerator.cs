@@ -1,7 +1,6 @@
-using Microsoft.Extensions.Logging;
 using System.Text;
 
-using RepoAIfyLib;
+using Microsoft.Extensions.Logging;
 
 namespace RepoAIfyLib.Services;
 
@@ -41,7 +40,7 @@ public class MarkdownGenerator
             // Check file size before attempting to read
             if (options.FileFilter.MaxFileSizeMb > 0 && file.Length > options.FileFilter.MaxFileSizeMb * 1024 * 1024)
             {
-                _logger.LogWarning("Skipping file '{RelativePath}' because its size ({FileSize} MB) exceeds the configured limit of {MaxFileSize} MB.", 
+                _logger.LogWarning("Skipping file '{RelativePath}' because its size ({FileSize} MB) exceeds the configured limit of {MaxFileSize} MB.",
                     relativePath, file.Length / 1024.0 / 1024.0, options.FileFilter.MaxFileSizeMb);
                 continue; // Skip to the next file
             }
@@ -72,7 +71,7 @@ public class MarkdownGenerator
             fileMarkdownBuilder.AppendLine("```");
             fileMarkdownBuilder.AppendLine(Constants.FileEndDelimiter);
             fileMarkdownBuilder.AppendLine();
-            
+
             string fileMarkdown = fileMarkdownBuilder.ToString();
             long newFileBytes = Encoding.UTF8.GetByteCount(fileMarkdown);
 
@@ -175,7 +174,7 @@ public class MarkdownGenerator
         // Rough estimation of markdown overhead (delimiters, metadata lines, code block fences)
         var overhead = $"\n### File: `{relativePath}`".Length + // File heading
                        $"*   **Full Path:** `{{260}}`".Length + // Max path length estimate
-                       $"*   **Extension:** `{fileExtension}`".Length + 
+                       $"*   **Extension:** `{fileExtension}`".Length +
                        $"``` {fileExtension.Substring(1)}```".Length + // Code fences
                        Constants.FileEndDelimiter.Length + // Explicit file end marker
                        8 * 10; // Newline characters and some buffer

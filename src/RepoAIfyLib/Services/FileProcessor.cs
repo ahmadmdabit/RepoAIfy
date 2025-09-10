@@ -1,6 +1,6 @@
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
+using Microsoft.Extensions.Logging;
 
 namespace RepoAIfyLib.Services;
 
@@ -21,10 +21,10 @@ public class FileProcessor
         IEnumerable<string> excludedDirectoryPatterns)
     {
         var matcher = new Matcher(StringComparison.OrdinalIgnoreCase);
-        
+
         // Add patterns to include files with the specified extensions from any directory.
         matcher.AddIncludePatterns(includedExtensions.Select(ext => $"**/*{ext}"));
-        
+
         // Add patterns to exclude directories.
         matcher.AddExcludePatterns(excludedDirectoryPatterns);
 

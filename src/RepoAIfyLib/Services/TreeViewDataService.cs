@@ -1,9 +1,7 @@
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.FileSystemGlobbing.Abstractions;
+using Microsoft.Extensions.Logging;
+
 using RepoAIfyLib.Models;
 
 namespace RepoAIfyLib.Services
@@ -41,7 +39,7 @@ namespace RepoAIfyLib.Services
                     // The path from the matcher uses forward slashes, which is great for consistency.
                     string relativePath = fileMatch.Path;
                     var pathSegments = relativePath.Split('/');
-                    
+
                     FileSystemTree parentNode = root;
 
                     // Create directory nodes as needed for the file's path.

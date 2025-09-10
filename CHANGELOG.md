@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dependency injection using Microsoft.Extensions.Hosting in both WPF and Console applications
 - Structured logging with ILogger throughout the application
 - AsyncRelayCommand for safe async command handling in WPF
+- IDialogService pattern for proper abstraction of UI-specific functionality
+- UILogRelayService for thread-safe log message relaying to the UI
 
 ### Changed
 - Improved file filtering logic with proper glob pattern matching
@@ -22,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated platform targeting consistency across all projects
 - Improved log file locations to use user-specific directories
 - Enhanced error handling with structured logging instead of Console.WriteLine
+- Implemented proper DI pattern for MainWindowViewModel with IDialogService abstraction
+- Improved logging architecture with thread-safe UI log relay
+- Removed unnecessary package references for cleaner dependencies
 
 ### Fixed
 - Critical path traversal security vulnerability in OptionsLoader
@@ -30,7 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Null-reference exceptions from nullable properties in FileSystemTree
 - Inefficient byte counting in markdown generator
 - Platform targeting inconsistencies causing build warnings
+- Dependency injection conflict with MainWindowViewModel requiring instance methods from MainWindow
+- Thread safety issues with UI log message handling
 
 ### Removed
 - Direct service instantiation in favor of dependency injection
 - Console.WriteLine calls in favor of structured logging
+- Service Locator anti-pattern in favor of proper DI

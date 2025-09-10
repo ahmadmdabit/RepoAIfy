@@ -1,10 +1,13 @@
 using System.CommandLine;
 using System.CommandLine.Invocation;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using RepoAIfyLib;
 using RepoAIfyLib.Services;
+
 using Serilog;
 
 namespace RepoAIfy;
@@ -14,19 +17,23 @@ internal class Program
     private static async Task<int> Main(string[] args)
     {
         var builder = Host.CreateApplicationBuilder(args);
-        
+
         // Configure Serilog
-        builder.Services.AddSerilog(config => 
+        builder.Services.AddSerilog(config =>
         {
-            config.WriteTo.Console();
-            config.WriteTo.File(
-                Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "RepoAIfy",
-                    "RepoAIfy-.log"
-                ),
-                rollingInterval: RollingInterval.Day
-            );
+            config
+                .MinimumLevel.Debug()
+                .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Information)
+                .WriteTo.Debug() // Add the Debug sink
+                .WriteTo.Console()
+                .WriteTo.File(
+                    Path.Combine(
+                        AppContext.BaseDirectory,
+                        "Logs",
+                        "RepoAIfy-.log"
+                    ),
+                    rollingInterval: RollingInterval.Day
+                );
         });
 
         // Register services
@@ -35,7 +42,7 @@ internal class Program
         builder.Services.AddTransient<ConverterRunner>();
         builder.Services.AddTransient<TreeViewDataService>();
         builder.Services.AddTransient<MarkdownGenerator>();
-        builder.Services.AddTransient<Func<int, MarkdownGenerator>>(provider => 
+        builder.Services.AddTransient<Func<int, MarkdownGenerator>>(provider =>
             (maxChunkSizeKb) => new MarkdownGenerator(provider.GetRequiredService<ILogger<MarkdownGenerator>>(), maxChunkSizeKb));
 
         var host = builder.Build();

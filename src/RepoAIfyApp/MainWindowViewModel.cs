@@ -1,14 +1,14 @@
-// RepoAIfyApp/MainWindowViewModel.cs
-using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
+using System.Windows;
 using System.Windows.Input;
-using Microsoft.Extensions.Logging;
+
+using Microsoft.Extensions.DependencyInjection;
+
 using RepoAIfyLib;
 using RepoAIfyLib.Services;
+
 using Serilog;
-using Serilog.Extensions.Logging;
 
 namespace RepoAIfyApp;
 
@@ -16,6 +16,7 @@ public class MainWindowViewModel : ViewModelBase
 {
     // Backing Fields
     private string _sourceDirectory = string.Empty;
+
     private string _optionsFile = string.Empty;
     private string _includedExtensions = string.Empty;
     private string _excludedDirectories = string.Empty;
@@ -28,9 +29,12 @@ public class MainWindowViewModel : ViewModelBase
 
     // UI-Bound Properties
     public string SourceDirectory { get => _sourceDirectory; set => SetField(ref _sourceDirectory, value); }
+
     public string OptionsFile { get => _optionsFile; set => SetField(ref _optionsFile, value); }
-    public string IncludedExtensions { get => _includedExtensions; set { if (SetField(ref _includedExtensions, value)) { DebouncePopulateTreeView(); } } }
-    public string ExcludedDirectories { get => _excludedDirectories; set { if (SetField(ref _excludedDirectories, value)) { DebouncePopulateTreeView(); } } }
+    public string IncludedExtensions
+    { get => _includedExtensions; set { if (SetField(ref _includedExtensions, value)) { DebouncePopulateTreeView(); } } }
+    public string ExcludedDirectories
+    { get => _excludedDirectories; set { if (SetField(ref _excludedDirectories, value)) { DebouncePopulateTreeView(); } } }
     public string MaxChunkSizeKb { get => _maxChunkSizeKb; set => SetField(ref _maxChunkSizeKb, value); }
     public string OutputDirectory { get => _outputDirectory; set => SetField(ref _outputDirectory, value); }
     public string LogOutput { get => _logOutput; set => SetField(ref _logOutput, value); }
@@ -40,21 +44,24 @@ public class MainWindowViewModel : ViewModelBase
 
     // Commands
     public ICommand BrowseSourceCommand { get; }
+
     public ICommand BrowseOptionsCommand { get; }
     public ICommand GenerateCommand { get; }
 
     // Services & Helpers
-    private readonly Func<string?> _browseForFolder;
-    private readonly Func<string?> _browseForJsonFile;
-    private readonly RepoAIfyLib.Services.OptionsLoader _optionsLoader;
-    private readonly RepoAIfyLib.Services.TreeViewDataService _treeViewDataService;
+    private readonly IDialogService _dialogService; // Depend on the interface
+
+    private readonly OptionsLoader _optionsLoader;
+    private readonly TreeViewDataService _treeViewDataService;
     private CancellationTokenSource? _filterCts;
 
-    public MainWindowViewModel(Func<string?> browseForFolder, Func<string?> browseForJsonFile, 
-        RepoAIfyLib.Services.OptionsLoader optionsLoader, RepoAIfyLib.Services.TreeViewDataService treeViewDataService)
+    public MainWindowViewModel(
+        IDialogService dialogService,
+        UILogRelayService logRelay,
+        OptionsLoader optionsLoader,
+        TreeViewDataService treeViewDataService)
     {
-        _browseForFolder = browseForFolder;
-        _browseForJsonFile = browseForJsonFile;
+        _dialogService = dialogService;
         _optionsLoader = optionsLoader;
         _treeViewDataService = treeViewDataService;
 
@@ -62,13 +69,27 @@ public class MainWindowViewModel : ViewModelBase
         BrowseOptionsCommand = new AsyncRelayCommand(async (obj) => await ExecuteBrowseOptions(obj));
         GenerateCommand = new AsyncRelayCommand(async (obj) => await ExecuteGenerate(), _ => !string.IsNullOrWhiteSpace(SourceDirectory) && !string.IsNullOrWhiteSpace(OptionsFile));
 
+        // Subscribe to log messages from the relay.
+        logRelay.LogMessagePublished += OnLogMessageReceived;
+
         _ = LoadDefaultOptions(); // Fire-and-forget is acceptable for initialization.
+    }
+
+    private void OnLogMessageReceived(string message)
+    {
+        // We are now responsible for dispatching to the UI thread.
+        // This happens AFTER the ViewModel is constructed, so the Dispatcher is safe to use.
+        Application.Current.Dispatcher.BeginInvoke(() =>
+        {
+            LogOutput += message + Environment.NewLine;
+        });
     }
 
     // Command Implementations & Logic
     private void ExecuteBrowseSource(object? obj)
     {
-        var folder = _browseForFolder();
+        // Use the service
+        var folder = _dialogService.ShowFolderBrowserDialog();
         if (!string.IsNullOrWhiteSpace(folder))
         {
             SourceDirectory = folder;
@@ -78,7 +99,8 @@ public class MainWindowViewModel : ViewModelBase
 
     private async Task ExecuteBrowseOptions(object? obj)
     {
-        var file = _browseForJsonFile();
+        // Use the service
+        var file = _dialogService.ShowFileBrowserDialog();
         if (!string.IsNullOrWhiteSpace(file))
         {
             OptionsFile = file;
@@ -124,7 +146,7 @@ public class MainWindowViewModel : ViewModelBase
             {
                 // Get services from the DI container through the application
                 var services = ((App)System.Windows.Application.Current).ServiceProvider;
-                var converterRunner = services.GetRequiredService<RepoAIfyLib.ConverterRunner>();
+                var converterRunner = services.GetRequiredService<ConverterRunner>();
                 await converterRunner.Run(sourceDirectoryInfo, options, includedFiles);
             });
 
@@ -151,7 +173,7 @@ public class MainWindowViewModel : ViewModelBase
         var rootNode = ConvertToFileSystemNode(fileSystemTree, null);
         RootNodes = new ObservableCollection<FileSystemNode> { rootNode };
     }
-    
+
     private async Task DebouncePopulateTreeView()
     {
         _filterCts?.Cancel();
@@ -195,5 +217,6 @@ public class MainWindowViewModel : ViewModelBase
     {
         var node = new FileSystemNode { Name = treeNode.Name, Path = treeNode.Path, IsDirectory = treeNode.IsDirectory, Parent = parent };
         foreach (var child in treeNode.Children) { node.Children.Add(ConvertToFileSystemNode(child, node)); }
-        return node;    }
+        return node;
+    }
 }
